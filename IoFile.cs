@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Linq;
 using System.Text.RegularExpressions;
+using IoDeSer.DeSer;
 
 namespace IoDeSer
 {
@@ -82,9 +83,9 @@ namespace IoDeSer
         /// <param name="sr">Stream to .io file.</param>
         /// <param name="objectType">The type of object that will be converted from stream <paramref name="sr"/>.</param>
         /// <returns>Object of type <paramref name="objectType"/>.</returns>
-        public static object ReadFromFile(StreamReader sr, Type objectType)
+        public static T ReadFromFile<T>(StreamReader sr)
         {
-            return ReadFromString(sr.ReadToEnd().Trim(), objectType);
+            return ReadFromString<T>(sr.ReadToEnd().Trim());
         }
         /// <summary>
         /// Reads content of string <paramref name="ioString"/> in .io file format and tries to convert it to type <paramref name="objectType"/>.
@@ -104,9 +105,9 @@ namespace IoDeSer
         /// <param name="ioString">String in .io file format.</param>
         /// <param name="objectType">The type of object that will be converted from string <paramref name="ioString"/>.</param>
         /// <returns>Object of type <paramref name="objectType"/>.</returns>
-        public static object ReadFromString(string ioString, Type objectType)
+        public static T ReadFromString<T>(string ioString)
         {
-            return IoDes.ReadFromString(ioString, objectType);
+            return IoDes.ReadFromString<T>(ioString);
         }
         
     }

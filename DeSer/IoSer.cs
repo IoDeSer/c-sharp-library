@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using IoDeSer.Processing;
+using IoDeSer.DeSer.Processing;
 
-namespace IoDeSer
+namespace IoDeSer.DeSer
 {
     internal static class IoSer
     {

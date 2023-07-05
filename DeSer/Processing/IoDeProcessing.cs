@@ -1,14 +1,9 @@
-﻿using IoDeSer.Ordering;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
-namespace IoDeSer.Processing
+namespace IoDeSer.DeSer.Processing
 {
     internal static class IoDeProcessing
     {
@@ -27,6 +22,7 @@ namespace IoDeSer.Processing
                 }
                 catch (System.ArgumentOutOfRangeException) { }
             }
+            
             ret = ret.Trim();
             return ret;
         }
@@ -52,8 +48,10 @@ namespace IoDeSer.Processing
                 obj = Array.CreateInstance(objectType.GetElementType(), objects.Length);
 
                 for (int i = 0; i < objects.Length; i++)
-                { 
-                    (obj as Array).SetValue(IoDes.ReadFromString(objects[i].Trim(), objectType.GetElementType()), i);
+                {
+                    var t = objectType.GetElementType();
+                    var readfromstr_output = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(t).Invoke(null, new []{ objects[i].Trim() });
+                    (obj as Array).SetValue(readfromstr_output, i);
                 }
             }
             else
@@ -68,7 +66,10 @@ namespace IoDeSer.Processing
 
                 for (int i = 0; i < objects.Length; i++)
                 {
-                    var input_data = IoDes.ReadFromString(objects[i].Trim(), elementType);
+                    var t = elementType;//??
+                    var input_data = typeof(IoDeSer.DeSer.IoDes).GetMethod("ReadFromString")
+                        .MakeGenericMethod(t)
+                        .Invoke(null, new[] { objects[i].Trim() });
                     var temp = typeof(Enumerable).GetMethod("Append").MakeGenericMethod(elementType)
                         .Invoke(obj, new object[] { obj, input_data });
 
@@ -137,7 +138,8 @@ namespace IoDeSer.Processing
                  */
                 if (FoundProperty.PropertyType.IsPrimitive || FoundProperty.PropertyType == typeof(string))
                 {
-                    FoundProperty.SetValue(obj, IoDes.ReadFromString(assignment[1].Trim(), FoundProperty.PropertyType));
+                    var readfromstr_output = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(FoundProperty.PropertyType).Invoke(null, new[] { assignment[1].Trim()});
+                    FoundProperty.SetValue(obj, readfromstr_output);
                 }
                 /*
                  * Classes and arrays are in new lines
@@ -161,7 +163,8 @@ namespace IoDeSer.Processing
                     }
                     newObjectString += "\n|";
 
-                    object child = IoDes.ReadFromString(newObjectString.Trim(), FoundProperty.PropertyType);
+                    var readfromstr_output = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(FoundProperty.PropertyType).Invoke(null, new[] { newObjectString.Trim() });
+                    object child = readfromstr_output;
                     FoundProperty.SetValue(obj, child);
 
                 }
@@ -176,8 +179,11 @@ namespace IoDeSer.Processing
         {
             ioString = DeleteTabulator(ioString);
             string[] keyValue = ioString.Split("\n+\n");
-            object k = IoDes.ReadFromString(keyValue[0], objectType.GetGenericArguments()[0]);
-            object v = IoDes.ReadFromString(keyValue[1], objectType.GetGenericArguments()[1]);
+            var readfromstr_output = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(objectType.GetGenericArguments()[0]).Invoke(null, new[] { keyValue[0] });
+            var readfromstr_output2 = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(objectType.GetGenericArguments()[1]).Invoke(null, new[] { keyValue[1] });
+
+            object k = readfromstr_output;
+            object v = readfromstr_output2;
             return Activator.CreateInstance(objectType, k, v);
         }
     }
