@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace IoDeSer.Ordering
+﻿namespace IoDeSer.Attributes.Ordering
 {
     /// <summary>
     /// Easy way to indicate order (<see cref="FIRST"/>, <see cref="LAST"/>) of items.

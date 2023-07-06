@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace IoDeSer.Attributes.Ordering
+﻿namespace IoDeSer.Attributes.Ordering
 {
     /// <summary>
     /// Indicates how all the items should be ordered

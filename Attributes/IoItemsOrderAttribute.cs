@@ -1,7 +1,5 @@
 ﻿using IoDeSer.Attributes.Ordering;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace IoDeSer.Attributes
 {
