@@ -1,5 +1,5 @@
 # About
-Repository stores code for C# library that allows to read from and write to .io file format. IS written in .NET Standard 2.0
+Repository stores code for C# library that allows to read from and write to .io file format. Is written in .NET Standard 2.0
 
 ### Functions and plans
 - [X] Primitive types (int, char)
