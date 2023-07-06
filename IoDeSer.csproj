@@ -9,7 +9,7 @@
     <Description>De/Serialization of .io file format.</Description>
     <PackageProjectUrl></PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/Io-Maciek/IoDeSer</RepositoryUrl>
+    <RepositoryUrl>https://github.com/IoDeSer/c-sharp-library</RepositoryUrl>
     <RepositoryType>github</RepositoryType>
     <PackageTags>file-format;serialization;deserialization</PackageTags>
     <NeutralLanguage>en</NeutralLanguage>
