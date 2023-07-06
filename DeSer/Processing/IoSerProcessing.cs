@@ -1,10 +1,10 @@
-﻿using IoDeSer.Ordering;
+﻿using IoDeSer.Attributes;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using IoDeSer.Attributes.Ordering;
+using IoDeSer.Extensions;
 
 namespace IoDeSer.DeSer.Processing
 {
@@ -33,7 +33,12 @@ namespace IoDeSer.DeSer.Processing
             Array tryArray = (objArray as Array);
             if (tryArray != null && tryArray.Rank > 1)
             {
-                MultidimensionalArray multiDimensionalArray = new MultidimensionalArray(tryArray, tryArray.GetType().GetElementType());
+                /*for (int i = 0; i < tryArray.Rank; i++)
+                {
+                    
+                }*/
+
+                MultidimensionalArray multiDimensionalArray = new MultidimensionalArray(tryArray);
                 Array jagged = multiDimensionalArray.ToJaggedArray();
 
                 objArray = jagged;

@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Text;
-using System.Linq;
-using System.Text.RegularExpressions;
 using IoDeSer.DeSer;
 
 namespace IoDeSer
@@ -27,13 +21,13 @@ namespace IoDeSer
         /// <para>
         /// ---</para>
         /// <para>
-        /// Throws <see cref="ArgumentNullException"/> if the object or some of its components <paramref name="obj"/> are null.
+        /// Throws <see cref="ArgumentNullException"/> if the object <paramref name="obj"/>  or some of its components are null.
         /// </para>
         /// <para>
         /// Throws <see cref="NotSupportedException"/> if the object's type is not supported.
         /// </para>
         /// </summary>
-        /// <returns>String in .io file format.</returns>
+        /// <returns>String in .io file format.</returns>s
         public static string WriteToString<T>(T obj)
         {
             return IoSer.WriteToString(obj, 0);
@@ -43,7 +37,7 @@ namespace IoDeSer
         /// <para>
         /// ---</para>
         /// <para>
-        /// Throws <see cref="ArgumentNullException"/> if the object or some of its components <paramref name="obj"/> are null.
+        /// Throws <see cref="ArgumentNullException"/> if the object <paramref name="obj"/> or some of its components are null.
         /// </para>
         /// <para>
         /// Throws <see cref="NotSupportedException"/> if the object's type is not supported.
@@ -53,7 +47,7 @@ namespace IoDeSer
         {
             sw.Write(WriteToString(obj));
         }
-        
+
 
 
 
@@ -66,48 +60,48 @@ namespace IoDeSer
 
 
         /// <summary>
-        /// Reads the content of .io file as stream <paramref name="sr"/> and tries to convert it to type <paramref name="objectType"/>.
+        /// Reads the content of .io file as stream <paramref name="sr"/> and tries to convert it to type <typeparamref name="T"/>.
         /// <para>
         /// ---
         /// </para>
         /// <para>
-        /// Throws <see cref="InvalidCastException"/> if the provided type <paramref name="objectType"/> does not contain property read from the file.
+        /// Throws <see cref="InvalidCastException"/> if the provided type <typeparamref name="T"/> does not contain some property from the file.
         /// </para>
         /// <para>
-        /// Throws <see cref="InvalidDataException"/> when the type <paramref name="objectType"/> is not supported.
+        /// Throws <see cref="InvalidDataException"/> when the type <typeparamref name="T"/> is not supported.
         /// </para>
         /// <para>
-        /// Throws <see cref="MissingMethodException"/> when the type <paramref name="objectType"/> does not implement parameterless constructor.
+        /// Throws <see cref="MissingMethodException"/> when the type <typeparamref name="T"/> does not implement parameterless constructor.
         /// </para>
         /// </summary>
         /// <param name="sr">Stream to .io file.</param>
-        /// <param name="objectType">The type of object that will be converted from stream <paramref name="sr"/>.</param>
-        /// <returns>Object of type <paramref name="objectType"/>.</returns>
+        /// <typeparam name="T">The type of object that will be converted from stream <paramref name="sr"/>.</typeparam>
+        /// <returns>Object of type <typeparamref name="T"/>.</returns>
         public static T ReadFromFile<T>(StreamReader sr)
         {
             return ReadFromString<T>(sr.ReadToEnd().Trim());
         }
         /// <summary>
-        /// Reads content of string <paramref name="ioString"/> in .io file format and tries to convert it to type <paramref name="objectType"/>.
+        /// Reads content of string <paramref name="ioString"/> in .io file format and tries to convert it to type <typeparamref name="T"/>.
         /// <para>
         /// ---
         /// </para>
         /// <para>
-        /// Throws <see cref="InvalidCastException"/> if the provided type <paramref name="objectType"/> does not contain property read from the string <paramref name="ioString"/>.
+        /// Throws <see cref="InvalidCastException"/> if the provided type <typeparamref name="T"/> does not contain some property from the string <paramref name="ioString"/>.
         /// </para>
         /// <para>
-        /// Throws <see cref="InvalidDataException"/> when the type <paramref name="objectType"/> is not supported.
+        /// Throws <see cref="InvalidDataException"/> when the type <typeparamref name="T"/> is not supported.
         /// </para>
         /// <para>
-        /// Throws <see cref="MissingMethodException"/> when the type <paramref name="objectType"/> does not implement parameterless constructor.
+        /// Throws <see cref="MissingMethodException"/> when the type <typeparamref name="T"/> does not implement parameterless constructor.
         /// </para>
         /// </summary>
         /// <param name="ioString">String in .io file format.</param>
-        /// <param name="objectType">The type of object that will be converted from string <paramref name="ioString"/>.</param>
-        /// <returns>Object of type <paramref name="objectType"/>.</returns>
+        /// <typeparam name="T">The type of object that will be converted from string <paramref name="ioString"/>.</typeparam>
+        /// <returns>Object of type <typeparamref name="T"/>.</returns>
         public static T ReadFromString<T>(string ioString)
         {
-            return IoDes.ReadFromString<T>(ioString);
+            return (T)IoDes.ReadFromString(ioString, typeof(T));
         }
         
     }

@@ -4,16 +4,16 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
-namespace IoDeSer
+namespace IoDeSer.Extensions
 {
-    internal class MultidimensionalArray
+    internal class MultidimensionalArray 
     {
         Array array;
         int[] maxies;
         public int Length { get; }
         Type primaryType;
 
-        public MultidimensionalArray(Array array, Type primaryType)
+        public MultidimensionalArray(Array array)
         {
             this.array = array;
             maxies = new int[array.Rank];
@@ -24,7 +24,7 @@ namespace IoDeSer
                 Length *= maxies[i];
             }
 
-            this.primaryType = primaryType;
+            this.primaryType = this.array.GetType().GetElementType();
         }
 
         public Array ToJaggedArray()
@@ -49,13 +49,14 @@ namespace IoDeSer
                 // TODO need deep copies not just 'getting' values
                 for (int j = 0; j < maxies[i]; j++)
                 {
-                    var next = arrays.GetValue(i + 1);       //createinstance(typof( typeof next??), next.lenght??) ???
+                    //var next = arrays.GetValue(i + 1);       //createinstance(typof( typeof next??), next.lenght??) ???
+                    var next = Array.CreateInstance(primaryType, maxies[i + 1]);
 
                     ((Array)arrays.GetValue(i)).SetValue(next, j);
                 }
             }
 
-
+           
 
 
             int[] indecies = new int[array.Rank];

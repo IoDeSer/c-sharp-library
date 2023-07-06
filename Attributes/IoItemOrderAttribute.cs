@@ -1,9 +1,7 @@
-﻿using IoDeSer.Ordering;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
+using IoDeSer.Attributes.Ordering;
 
-namespace IoDeSer
+namespace IoDeSer.Attributes
 {
     /// <summary>
     /// Changes the default order of properties in .io file. The ones with the lower value will precede those of higher value.
@@ -33,7 +31,7 @@ namespace IoDeSer
         /// <summary>
         /// Initializes ordering of property using any number from 1 - <see cref="uint.MaxValue"/>.
         /// <para>
-        /// Number '0' is also allowed, but is causing error due to ambigous call with constructor <see cref="IoItemOrderAttribute(ItemOrder)"/>.
+        /// Number '0' is also allowed, but is causing error due to ambiguous call with constructor <see cref="IoItemOrderAttribute(ItemOrder)"/>.
         /// </para>
         /// </summary>
         public IoItemOrderAttribute(uint orderInFile)

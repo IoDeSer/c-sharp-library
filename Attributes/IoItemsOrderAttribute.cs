@@ -1,9 +1,9 @@
-﻿using IoDeSer.Ordering;
+﻿using IoDeSer.Attributes.Ordering;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace IoDeSer
+namespace IoDeSer.Attributes
 {
     /// <summary>
     /// Describes how all the properties in this calss should be ordered.

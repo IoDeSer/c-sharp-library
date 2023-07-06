@@ -1,9 +1,6 @@
-﻿using IoDeSer.Ordering;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using IoDeSer.DeSer.Processing;
 
@@ -22,6 +19,7 @@ namespace IoDeSer.DeSer
 
             if (objectType.IsPrimitive || objectType == typeof(string))
             {
+                // TODO in string check and change symbols '|', "->" and '+'
                 sb.Append($"|{obj}|");
             }
             else if (typeof(IEnumerable).IsAssignableFrom(objectType))

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace IoDeSer
+namespace IoDeSer.Attributes
 {
     /// <summary>
     /// Indicates, that property with this attribute should not be serialized.

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using IoDeSer.Attributes;
+using IoDeSer.Extensions;
 
 namespace IoDeSer.DeSer.Processing
 {
@@ -49,9 +51,7 @@ namespace IoDeSer.DeSer.Processing
 
                 for (int i = 0; i < objects.Length; i++)
                 {
-                    var t = objectType.GetElementType();
-                    var readfromstr_output = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(t).Invoke(null, new []{ objects[i].Trim() });
-                    (obj as Array).SetValue(readfromstr_output, i);
+                    (obj as Array).SetValue(IoDes.ReadFromString(objects[i].Trim(), objectType.GetElementType()), i);
                 }
             }
             else
@@ -66,10 +66,7 @@ namespace IoDeSer.DeSer.Processing
 
                 for (int i = 0; i < objects.Length; i++)
                 {
-                    var t = elementType;//??
-                    var input_data = typeof(IoDeSer.DeSer.IoDes).GetMethod("ReadFromString")
-                        .MakeGenericMethod(t)
-                        .Invoke(null, new[] { objects[i].Trim() });
+                    var input_data = IoDes.ReadFromString(objects[i].Trim(), elementType);
                     var temp = typeof(Enumerable).GetMethod("Append").MakeGenericMethod(elementType)
                         .Invoke(obj, new object[] { obj, input_data });
 
@@ -138,8 +135,7 @@ namespace IoDeSer.DeSer.Processing
                  */
                 if (FoundProperty.PropertyType.IsPrimitive || FoundProperty.PropertyType == typeof(string))
                 {
-                    var readfromstr_output = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(FoundProperty.PropertyType).Invoke(null, new[] { assignment[1].Trim()});
-                    FoundProperty.SetValue(obj, readfromstr_output);
+                    FoundProperty.SetValue(obj, IoDes.ReadFromString(assignment[1].Trim(), FoundProperty.PropertyType));
                 }
                 /*
                  * Classes and arrays are in new lines
@@ -163,9 +159,7 @@ namespace IoDeSer.DeSer.Processing
                     }
                     newObjectString += "\n|";
 
-                    var readfromstr_output = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(FoundProperty.PropertyType).Invoke(null, new[] { newObjectString.Trim() });
-                    object child = readfromstr_output;
-                    FoundProperty.SetValue(obj, child);
+                    FoundProperty.SetValue(obj, IoDes.ReadFromString(newObjectString.Trim(), FoundProperty.PropertyType));
 
                 }
 
@@ -179,11 +173,10 @@ namespace IoDeSer.DeSer.Processing
         {
             ioString = DeleteTabulator(ioString);
             string[] keyValue = ioString.Split("\n+\n");
-            var readfromstr_output = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(objectType.GetGenericArguments()[0]).Invoke(null, new[] { keyValue[0] });
-            var readfromstr_output2 = typeof(IoDes).GetMethod("ReadFromString").MakeGenericMethod(objectType.GetGenericArguments()[1]).Invoke(null, new[] { keyValue[1] });
 
-            object k = readfromstr_output;
-            object v = readfromstr_output2;
+            object k = IoDes.ReadFromString(keyValue[0], objectType.GetGenericArguments()[0]);
+            object v = IoDes.ReadFromString(keyValue[1], objectType.GetGenericArguments()[1]);
+
             return Activator.CreateInstance(objectType, k, v);
         }
     }

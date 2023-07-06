@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace IoDeSer
+namespace IoDeSer.Extensions
 {
     internal static class StringExtension
     {

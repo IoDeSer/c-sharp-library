@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace IoDeSer
+namespace IoDeSer.Attributes
 {
     /// <summary>
     /// Overrides the name of a property for serialize and deserialize purposes.
