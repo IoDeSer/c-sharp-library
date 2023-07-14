@@ -27,7 +27,7 @@ namespace IoDeSer
         /// Throws <see cref="NotSupportedException"/> if the object's type is not supported.
         /// </para>
         /// </summary>
-        /// <returns>String in .io file format.</returns>s
+        /// <returns>String in .io file format.</returns>
         public static string WriteToString<T>(T obj)
         {
             return IoSer.WriteToString(obj, 0);

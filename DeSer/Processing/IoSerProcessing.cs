@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using IoDeSer.Attributes.Ordering;
 using IoDeSer.Extensions;
+using IoDeSer.Helpers;
 
 namespace IoDeSer.DeSer.Processing
 {
@@ -33,11 +34,6 @@ namespace IoDeSer.DeSer.Processing
             Array tryArray = (objArray as Array);
             if (tryArray != null && tryArray.Rank > 1)
             {
-                /*for (int i = 0; i < tryArray.Rank; i++)
-                {
-                    
-                }*/
-
                 MultidimensionalArray multiDimensionalArray = new MultidimensionalArray(tryArray);
                 Array jagged = multiDimensionalArray.ToJaggedArray();
 
@@ -59,32 +55,7 @@ namespace IoDeSer.DeSer.Processing
         internal static string SerClass<T>(T obj, int number)
         {
             PropertyInfo[] objectClassProperties = obj.GetType().GetProperties();
-            Type objectType = obj.GetType();
-
-            IoItemsOrderAttribute itemsOrder = objectType.GetCustomAttribute<IoItemsOrderAttribute>();
-            if (itemsOrder == null)
-            {
-                objectClassProperties = objectClassProperties.OrderBy(p => p.GetCustomAttribute<IoItemOrderAttribute>() == null ? int.MaxValue : p.GetCustomAttribute<IoItemOrderAttribute>().Order).ToArray();
-            }
-            else
-            {
-                switch (itemsOrder.Order)
-                {
-                    case ItemsOrder.ALPHABETICAL:
-                        objectClassProperties = objectClassProperties.OrderBy(p => p.Name).ToArray();
-                        break;
-                    case ItemsOrder.ALPHABETICAL_REVERSE:
-                        objectClassProperties = objectClassProperties.OrderByDescending(p => p.Name).ToArray();
-                        break;
-                    case ItemsOrder.LONGEST_FIRST:
-                        objectClassProperties = objectClassProperties.OrderByDescending(p => p.Name.Length).ToArray();
-                        break;
-                    case ItemsOrder.SHORTEST_FIRST:
-                        objectClassProperties = objectClassProperties.OrderBy(p => p.Name.Length).ToArray();
-                        break;
-                }
-            }
-
+            Array.Sort(objectClassProperties, new IoPropertiesComparator<T>());
 
 
             string classReturn = "";
@@ -122,9 +93,8 @@ namespace IoDeSer.DeSer.Processing
             object key = objectType.GetProperty("Key").GetValue(obj);
             object value = objectType.GetProperty("Value").GetValue(obj);
             Type[] types = objectType.GetGenericArguments();
-            //TODO for classess
-            return $"|\n{MakeShift(number + 1)}{IoSer.WriteToString(key, number + 1)}\n{MakeShift(number + 1)}+\n{MakeShift(number + 1)}{IoSer.WriteToString(value, number + 1)}\n{MakeShift(number)}|";
 
+            return $"|\n{MakeShift(number + 1)}{IoSer.WriteToString(key, number + 1)}\n{MakeShift(number + 1)}+\n{MakeShift(number + 1)}{IoSer.WriteToString(value, number + 1)}\n{MakeShift(number)}|";
         }
     }
 }
