@@ -1,3 +1,5 @@
+[![Nuget](https://img.shields.io/nuget/v/IoDeSer?style=for-the-badge&label=IoDeSer&color=%23e6e62c)](https://www.nuget.org/packages/IoDeSer)
+
 # About
 Repository stores code for C# library that allows to read from and write to .io file format. Is written in .NET Standard 2.0
 

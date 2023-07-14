@@ -5,19 +5,35 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Io-Maciek</Authors>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>0.3.3</Version>
+    <Version>0.3.4</Version>
     <Description>De/Serialization of .io file format.</Description>
-    <PackageProjectUrl></PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/IoDeSer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/IoDeSer/c-sharp-library</RepositoryUrl>
     <RepositoryType>github</RepositoryType>
-    <PackageTags>file-format;serialization;deserialization</PackageTags>
+    <PackageTags>file-format;serialization;deserialization;io</PackageTags>
     <NeutralLanguage>en</NeutralLanguage>
     <SignAssembly>False</SignAssembly>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    <Title>IoDeSer</Title>
+    <Company>.ioDeSer</Company>
+    <PackageIcon>io.png</PackageIcon>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="D:\io.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Update="README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
