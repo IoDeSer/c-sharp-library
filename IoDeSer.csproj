@@ -5,7 +5,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Io-Maciek</Authors>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>0.3.4</Version>
+    <Version>0.4.0</Version>
     <Description>De/Serialization of .io file format.</Description>
     <PackageProjectUrl>https://github.com/IoDeSer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -17,19 +17,17 @@
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <Title>IoDeSer</Title>
     <Company>.ioDeSer</Company>
-    <PackageIcon>io.png</PackageIcon>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>Struct de/serialization</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="D:\io.png">
+    <None Update="icon.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="LICENSE.txt">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>

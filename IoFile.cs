@@ -30,7 +30,7 @@ namespace IoDeSer
         /// <returns>String in .io file format.</returns>
         public static string WriteToString<T>(T obj)
         {
-            return IoSer.WriteToString(obj, 0);
+            return IoSer.WriteToString(obj);
         }
         /// <summary>
         /// Converts the provided object <paramref name="obj"/> to .io file format and writes it to the stream <paramref name="sw"/>.

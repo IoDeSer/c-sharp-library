@@ -8,37 +8,36 @@ namespace IoDeSer.DeSer
 {
     internal static class IoSer
     {
-        internal static string WriteToString<T>(T obj, int number)
+        internal static string WriteToString<T>(T obj, int number=0)
         {
             if (obj == null)
                 throw new ArgumentNullException(null, $"The passed object or some of its components are null.");
 
             Type objectType = obj.GetType();
-            StringBuilder sb = new StringBuilder();
 
 
             if (objectType.IsPrimitive || objectType == typeof(string))
             {
                 // TODO in string check and change symbols '|', "->" and '+'
-                sb.Append($"|{obj}|");
+                return $"|{obj}|";
             }
             else if (typeof(IEnumerable).IsAssignableFrom(objectType))
             {
-                sb.Append(IoSerProcessing.SerIEnumerable(obj, number));
+                return IoSerProcessing.SerIEnumerable(obj, number);
             }
             else if (objectType.IsClass)
             {
-                sb.Append(IoSerProcessing.SerClass(obj, number));
-            }else if(objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                return IoSerProcessing.SerClass(obj, number);
+            }else if (objectType.IsValueType)
             {
-                sb.Append(IoSerProcessing.SerDictionary(obj, number));
+                
+                if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                    return IoSerProcessing.SerDictionary(obj, number);
+                return IoSerProcessing.SerStruct(obj, number);
             }
             else
-            {
                 throw new NotSupportedException($"Object of type {objectType.Name} is not supported.");
-            }
 
-            return sb.ToString();
         }
     }
 }

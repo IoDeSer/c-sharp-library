@@ -32,9 +32,11 @@ namespace IoDeSer.DeSer
             {
                 return IoDeProcessing.DeClass(ref ioString, objectType);
             }
-            else if(objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            else if (objectType.IsValueType)
             {
-                return IoDeProcessing.DeDictionary(ref ioString, objectType);
+                if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                    return IoDeProcessing.DeDictionary(ref ioString, objectType);
+                return IoDeProcessing.DeStruct(ref ioString, objectType);
             }
             else
                 throw new InvalidDataException($"Object of type {objectType} is not supported.");

@@ -179,5 +179,10 @@ namespace IoDeSer.DeSer.Processing
 
             return Activator.CreateInstance(objectType, k, v);
         }
+
+        internal static object DeStruct(ref string ioString, Type objectType)
+        {
+            return DeClass(ref ioString, objectType);
+        }
     }
 }

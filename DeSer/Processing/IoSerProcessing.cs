@@ -96,5 +96,10 @@ namespace IoDeSer.DeSer.Processing
 
             return $"|\n{MakeShift(number + 1)}{IoSer.WriteToString(key, number + 1)}\n{MakeShift(number + 1)}+\n{MakeShift(number + 1)}{IoSer.WriteToString(value, number + 1)}\n{MakeShift(number)}|";
         }
+
+        internal static string SerStruct<T>(T obj, int number)
+        {
+            return SerClass(obj, number);
+        }
     }
 }
