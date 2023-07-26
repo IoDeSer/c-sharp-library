@@ -21,7 +21,6 @@ namespace IoDeSer.DeSer
 
             if (objectType.IsPrimitive || objectType == typeof(string))
             {
-                // TODO in string check and change special tokens for '|', "->" and '+'
                 return Convert.ChangeType(ioString, objectType);
             }
             else if (typeof(IEnumerable).IsAssignableFrom(objectType))

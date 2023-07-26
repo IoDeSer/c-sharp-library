@@ -8,7 +8,7 @@ namespace IoDeSer.DeSer
 {
     internal static class IoSer
     {
-        internal static string WriteToString<T>(T obj, int number=0)
+        internal static string WriteToString<T>(T obj, int number=0, PrintType printType = PrintType.Pretty)
         {
             if (obj == null)
                 throw new ArgumentNullException(null, $"The passed object or some of its components are null.");
@@ -23,17 +23,17 @@ namespace IoDeSer.DeSer
             }
             else if (typeof(IEnumerable).IsAssignableFrom(objectType))
             {
-                return IoSerProcessing.SerIEnumerable(obj, number);
+                return IoSerProcessing.SerIEnumerable(obj, number, printType);
             }
             else if (objectType.IsClass)
             {
-                return IoSerProcessing.SerClass(obj, number);
+                return IoSerProcessing.SerClass(obj, number, printType);
             }else if (objectType.IsValueType)
             {
                 
                 if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-                    return IoSerProcessing.SerDictionary(obj, number);
-                return IoSerProcessing.SerStruct(obj, number);
+                    return IoSerProcessing.SerDictionary(obj, number, printType);
+                return IoSerProcessing.SerStruct(obj, number, printType);
             }
             else
                 throw new NotSupportedException($"Object of type {objectType.Name} is not supported.");

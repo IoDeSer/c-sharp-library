@@ -6,6 +6,7 @@ using System.Reflection;
 using IoDeSer.Attributes.Ordering;
 using IoDeSer.Extensions;
 using IoDeSer.Helpers;
+using System.Text.RegularExpressions;
 
 namespace IoDeSer.DeSer.Processing
 {
@@ -25,7 +26,7 @@ namespace IoDeSer.DeSer.Processing
         }
 
 
-        internal static string SerIEnumerable<T>(T obj, int number)
+        internal static string SerIEnumerable<T>(T obj, int number, PrintType printType = PrintType.OneLine)
         {
             IEnumerable objArray = (IEnumerable)obj;
             string arrayReturn = "";
@@ -43,16 +44,22 @@ namespace IoDeSer.DeSer.Processing
             foreach (var element in objArray)
             {
                 if (!isFirst)
-                    arrayReturn += $"\n{MakeShift(number + 1)}+\n";
+                    arrayReturn += printType == PrintType.Pretty ? $"\n{MakeShift(number + 1)}+\n":"+";
                 else
                     isFirst = false;
-                arrayReturn += MakeShift(number + 1) + IoSer.WriteToString(element, number + 1);
+                arrayReturn += (printType==PrintType.Pretty?MakeShift(number + 1):"") + IoSer.WriteToString(element, number + 1, printType);
 
             }
-            return $"|\n{arrayReturn}\n{MakeShift(number)}|";
+            switch (printType)
+            {
+                case PrintType.OneLine:
+                    return $"|{arrayReturn}|";
+                default:
+                    return $"|\n{arrayReturn}\n{MakeShift(number)}|";
+            }
         }
 
-        internal static string SerClass<T>(T obj, int number)
+        internal static string SerClass<T>(T obj, int number, PrintType printType = PrintType.OneLine)
         {
             PropertyInfo[] objectClassProperties = obj.GetType().GetProperties();
             Array.Sort(objectClassProperties, new IoPropertiesComparator<T>());
@@ -73,20 +80,27 @@ namespace IoDeSer.DeSer.Processing
                         IoItemNameAttribute ioNameOptionalAttribute = property.GetCustomAttribute<IoItemNameAttribute>();
                         string propertyName = ioNameOptionalAttribute != null ? ioNameOptionalAttribute.customPropertyName : property.Name;
 
-                        if (!isFirst)
+                        if (!isFirst && printType==PrintType.Pretty)
                         {
                             classReturn += "\n";
                         }
 
-                        classReturn += $"{MakeShift(number + 1)}{propertyName}->{IoSer.WriteToString(propertyValue, number + 1)}";
+                        classReturn += $"{(printType==PrintType.Pretty?MakeShift(number + 1):"")}{propertyName}->{IoSer.WriteToString(propertyValue, number + 1, printType)}";
                         isFirst = false;
                     }
                 }
             }
-            return $"|\n{classReturn}\n{MakeShift(number)}|";
+
+            switch (printType)
+            {
+                case PrintType.OneLine:
+                    return $"|{classReturn}|";
+                default:
+                    return $"|\n{classReturn}\n{MakeShift(number)}|";
+            }
         }
 
-        internal static string SerDictionary<T>(T obj, int number)
+        internal static string SerDictionary<T>(T obj, int number, PrintType printType = PrintType.OneLine)
         {
             Type objectType = obj.GetType();
 
@@ -94,12 +108,21 @@ namespace IoDeSer.DeSer.Processing
             object value = objectType.GetProperty("Value").GetValue(obj);
             Type[] types = objectType.GetGenericArguments();
 
-            return $"|\n{MakeShift(number + 1)}{IoSer.WriteToString(key, number + 1)}\n{MakeShift(number + 1)}+\n{MakeShift(number + 1)}{IoSer.WriteToString(value, number + 1)}\n{MakeShift(number)}|";
+            switch (printType)
+            {
+                case PrintType.OneLine:
+                    return $"|{IoSer.WriteToString(key, number + 1, printType)}+{IoSer.WriteToString(value, number + 1, printType)}|";
+                default:
+                    return $"|\n{MakeShift(number + 1)}{IoSer.WriteToString(key, number + 1, printType)}" +
+                            $"\n{MakeShift(number + 1)}+" +
+                            $"\n{MakeShift(number + 1)}{IoSer.WriteToString(value, number + 1, printType)}" +
+                            $"\n{MakeShift(number)}|";
+            }
         }
 
-        internal static string SerStruct<T>(T obj, int number)
+        internal static string SerStruct<T>(T obj, int number, PrintType printType = PrintType.OneLine)
         {
-            return SerClass(obj, number);
+            return SerClass(obj, number, printType);
         }
     }
 }

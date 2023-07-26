@@ -28,9 +28,9 @@ namespace IoDeSer
         /// </para>
         /// </summary>
         /// <returns>String in .io file format.</returns>
-        public static string WriteToString<T>(T obj)
+        public static string WriteToString<T>(T obj, PrintType printType = PrintType.Pretty)
         {
-            return IoSer.WriteToString(obj);
+            return IoSer.WriteToString(obj, 0, printType);
         }
         /// <summary>
         /// Converts the provided object <paramref name="obj"/> to .io file format and writes it to the stream <paramref name="sw"/>.
@@ -43,9 +43,9 @@ namespace IoDeSer
         /// Throws <see cref="NotSupportedException"/> if the object's type is not supported.
         /// </para>
         /// </summary>
-        public static void WriteToFile<T>(T obj, StreamWriter sw)
+        public static void WriteToFile<T>(T obj, StreamWriter sw, PrintType printType = PrintType.Pretty)
         {
-            sw.Write(WriteToString(obj));
+            sw.Write(WriteToString(obj, printType));
         }
 
 
