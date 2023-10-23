@@ -92,6 +92,7 @@ namespace IoDeSer.DeSer.Processing
             }
             ioString = DeleteTabulator(ioString);
 
+
             PropertyInfo[] properties = obj.GetType().GetProperties();
             string[] propertiesStrings = new string[properties.Length];
 
@@ -109,13 +110,15 @@ namespace IoDeSer.DeSer.Processing
                 string _LINE = lines[l];
                 string[] assignment = _LINE.Split("->");
 
+                if (assignment.Length == 0)
+                    continue;
+
                 string variableName = assignment[0].Trim();
                 int propertyIndex = -1;
 
 
                 for (int z = 0; z < propertiesStrings.Length; z++)
                 {
-
                     if (variableName == propertiesStrings[z])
                     {
                         propertyIndex = z;
@@ -142,7 +145,15 @@ namespace IoDeSer.DeSer.Processing
                  */
                 else
                 {
+                    if (lines[l + 1] == "|")
+                    {
+                        l++;
+                        FoundProperty.SetValue(obj, IoDes.ReadFromString("|\n\t\n|", FoundProperty.PropertyType));
+                        continue;
+                    }
+
                     l++;
+                    
                     int newObjectStart = l;
                     do
                     {
@@ -162,7 +173,6 @@ namespace IoDeSer.DeSer.Processing
                     FoundProperty.SetValue(obj, IoDes.ReadFromString(newObjectString.Trim(), FoundProperty.PropertyType));
 
                 }
-
 
             }
 
