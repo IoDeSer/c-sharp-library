@@ -5,7 +5,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Io-Maciek</Authors>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>0.4.0</Version>
+    <Version>0.4.2</Version>
     <Description>De/Serialization of .io file format.</Description>
     <PackageProjectUrl>https://github.com/IoDeSer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>

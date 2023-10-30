@@ -8,6 +8,6 @@ Repository stores code for C# library that allows to read from and write to .io 
 - [X] Strings
 - [X] Classes
 - [X] Arrays (and jagged arrays)
-- [X] Any IEnumerable collection *(works, but should be tested first)*
+- [X] Any IEnumerable collection
 - [X] Combinations of all above
 - [ ] Multidimensional arrays are planned
