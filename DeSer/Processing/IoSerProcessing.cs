@@ -14,7 +14,7 @@ namespace IoDeSer.DeSer.Processing
         /// <summary>
         /// Returns <paramref name="number"/> of tabulators as string.
         /// </summary>
-        static string MakeShift(int number)
+        public static string MakeShift(int number)
         {
             string shift = "";
             for (int i = 0; i < number; i++)
@@ -34,10 +34,10 @@ namespace IoDeSer.DeSer.Processing
             Array tryArray = (objArray as Array);
             if (tryArray != null && tryArray.Rank > 1)
             {
-                MultidimensionalArray multiDimensionalArray = new MultidimensionalArray(tryArray);
-                Array jagged = multiDimensionalArray.ToJaggedArray();
+                MultidimensionalArray multiDimensionalArray = new MultidimensionalArray(tryArray, number);
 
-                objArray = jagged;
+                return multiDimensionalArray.ToString();
+                
             }
 
             foreach (var element in objArray)
@@ -51,6 +51,9 @@ namespace IoDeSer.DeSer.Processing
             }
             return $"|\n{arrayReturn}\n{MakeShift(number)}|";
         }
+
+        
+
 
         internal static string SerClass<T>(T obj, int number)
         {

@@ -18,11 +18,8 @@ namespace IoDeSer.DeSer.Processing
             string[] lines = str.Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
-                try
-                {
+                if (lines[i].Length> 1)
                     ret += $"{lines[i].Substring(1)}\n";
-                }
-                catch (System.ArgumentOutOfRangeException) { }
             }
             
             ret = ret.Trim();
