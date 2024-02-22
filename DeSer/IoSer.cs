@@ -10,8 +10,8 @@ namespace IoDeSer.DeSer
     {
         internal static string WriteToString<T>(T obj, int number=0)
         {
-            if (obj == null)
-                throw new ArgumentNullException(null, $"The passed object or some of its components are null.");
+            if (obj == null) return "|||";
+                //throw new ArgumentNullException(null, $"The passed object or some of its components are null.");
 
             Type objectType = obj.GetType();
 

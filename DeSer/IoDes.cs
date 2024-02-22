@@ -16,6 +16,8 @@ namespace IoDeSer.DeSer
 
         internal static object ReadFromString(string ioString, Type objectType)
         {
+            if (ioString == "|||") return null;
+
             Match ioMatch = ioPattern.Match(ioString);
             ioString = ioMatch.Groups[1].Value;
 

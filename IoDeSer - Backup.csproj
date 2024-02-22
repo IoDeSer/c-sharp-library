@@ -20,7 +20,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Added basic support for null values.</PackageReleaseNotes>
+    <PackageReleaseNotes>Changed try/catch to if statement</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
