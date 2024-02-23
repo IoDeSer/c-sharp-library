@@ -118,7 +118,7 @@ namespace IoDeSer.DeSer.Processing
             {
                 TimeSpan span = (TimeSpan)(obj as object);
 
-                return $"|\n{MakeShift(number + 1)}seconds->|{span.TotalSeconds}|\n{MakeShift(number + 1)}nanoseconds->|{span.Ticks*100}|\n{MakeShift(number)}|";
+                return $"|\n{MakeShift(number + 1)}seconds->|{(long)span.TotalSeconds}|\n{MakeShift(number + 1)}nanoseconds->|{span.Ticks*100}|\n{MakeShift(number)}|";
             }
             return null;
         }
