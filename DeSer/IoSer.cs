@@ -24,13 +24,16 @@ namespace IoDeSer.DeSer
             else if (typeof(IEnumerable).IsAssignableFrom(objectType))
             {
                 return IoSerProcessing.SerIEnumerable(obj, number);
+            } else if (typeof(DateTime).IsAssignableFrom(objectType) || typeof(DateTimeOffset).IsAssignableFrom(objectType)
+                 || typeof(TimeSpan).IsAssignableFrom(objectType)) {
+                return IoSerProcessing.SerDateTime(obj, number);
             }
             else if (objectType.IsClass)
             {
                 return IoSerProcessing.SerClass(obj, number);
-            }else if (objectType.IsValueType)
+            } else if (objectType.IsValueType)
             {
-                
+
                 if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                     return IoSerProcessing.SerDictionary(obj, number);
                 return IoSerProcessing.SerStruct(obj, number);

@@ -104,5 +104,23 @@ namespace IoDeSer.DeSer.Processing
         {
             return SerClass(obj, number);
         }
+
+        internal static string SerDateTime<T>(T obj, int number)
+        {
+            if (typeof(DateTime).IsAssignableFrom(obj.GetType()))
+            {
+                return ((DateTime)(obj as object)).ToString("|yyyy-MM-dd'T'HH:mm:ss.fffK|");
+            }else if (typeof(DateTimeOffset).IsAssignableFrom(obj.GetType()))
+            {
+                return ((DateTimeOffset)(obj as object)).ToString("|yyyy-MM-dd'T'HH:mm:ss.fffK|");
+            }
+            else if (typeof(TimeSpan).IsAssignableFrom(obj.GetType()))
+            {
+                TimeSpan span = (TimeSpan)(obj as object);
+
+                return $"|\n{MakeShift(number + 1)}seconds->|{span.TotalSeconds}|\n{MakeShift(number + 1)}nanoseconds->|{span.Ticks*100}|\n{MakeShift(number)}|";
+            }
+            return null;
+        }
     }
 }
