@@ -16,6 +16,8 @@ namespace IoDeSer.DeSer
 
         internal static object ReadFromString(string ioString, Type objectType)
         {
+            /*            Console.WriteLine($"TYP: {objectType}");
+                        Console.WriteLine($"input: {ioString}\n\n");*/
             if (ioString == "|||") return null;
 
             Match ioMatch = ioPattern.Match(ioString);
@@ -25,6 +27,11 @@ namespace IoDeSer.DeSer
             {
                 // TODO in string check and change special tokens for '|', "->" and '+'
                 return Convert.ChangeType(ioString, objectType);
+            }
+            else if (typeof(DateTime).IsAssignableFrom(objectType) || typeof(DateTimeOffset).IsAssignableFrom(objectType)
+                 || typeof(TimeSpan).IsAssignableFrom(objectType))
+            {
+                return IoDeProcessing.DeDateTime(ref ioString, objectType);
             }
             else if (typeof(IEnumerable).IsAssignableFrom(objectType))
             {

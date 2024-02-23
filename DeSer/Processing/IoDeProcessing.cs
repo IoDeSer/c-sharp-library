@@ -18,14 +18,14 @@ namespace IoDeSer.DeSer.Processing
             string[] lines = str.Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
-                if (lines[i].Length> 1)
+                if (lines[i].Length > 1)
                     ret += $"{lines[i].Substring(1)}\n";
             }
-            
+
             ret = ret.Trim();
             return ret;
         }
-        
+
 
         internal static object DeIEnumerable(ref string ioString, Type objectType)
         {
@@ -133,7 +133,7 @@ namespace IoDeSer.DeSer.Processing
                 /*
                  * Primitive types and string are in the same line as property name
                  */
-                if (FoundProperty.PropertyType.IsPrimitive || FoundProperty.PropertyType == typeof(string))
+                if (assignment[1].Length>1)
                 {
                     FoundProperty.SetValue(obj, IoDes.ReadFromString(assignment[1].Trim(), FoundProperty.PropertyType));
                 }
@@ -150,7 +150,7 @@ namespace IoDeSer.DeSer.Processing
                     }
 
                     l++;
-                    
+
                     int newObjectStart = l;
                     do
                     {
@@ -190,6 +190,28 @@ namespace IoDeSer.DeSer.Processing
         internal static object DeStruct(ref string ioString, Type objectType)
         {
             return DeClass(ref ioString, objectType);
+        }
+
+        internal static object DeDateTime(ref string ioString, Type objectType)
+        {
+            if (typeof(DateTime).IsAssignableFrom(objectType))
+            {
+                return DateTime.Parse(ioString);
+            }
+            else if (typeof(DateTimeOffset).IsAssignableFrom(objectType))
+            {
+                return DateTimeOffset.Parse(ioString);
+            }
+            else if (typeof(TimeSpan).IsAssignableFrom(objectType))
+            {
+                ioString=DeleteTabulator(ioString);
+                string[] lines = ioString.Split('\n');
+                long s = IoFile.ReadFromString<long>(lines[0].Split("->")[1]);
+                long n = IoFile.ReadFromString<long>(lines[1].Split("->")[1]);
+
+                return TimeSpan.FromTicks(n/100);
+            }
+            return null;
         }
     }
 }
