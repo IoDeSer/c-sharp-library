@@ -6,6 +6,7 @@ using System.Reflection;
 using IoDeSer.Attributes.Ordering;
 using IoDeSer.Extensions;
 using IoDeSer.Helpers;
+using System.Numerics;
 
 namespace IoDeSer.DeSer.Processing
 {
@@ -117,8 +118,10 @@ namespace IoDeSer.DeSer.Processing
             else if (typeof(TimeSpan).IsAssignableFrom(obj.GetType()))
             {
                 TimeSpan span = (TimeSpan)(obj as object);
-
-                return $"|\n{MakeShift(number + 1)}seconds->|{(long)span.TotalSeconds}|\n{MakeShift(number + 1)}nanoseconds->|{span.Ticks*100}|\n{MakeShift(number)}|";
+                BigInteger nanos = new BigInteger(span.Ticks) * 100;
+                //long nanos = span.Ticks * 100;
+                
+                return $"|\n{MakeShift(number + 1)}seconds->|{(long)span.TotalSeconds}|\n{MakeShift(number + 1)}nanoseconds->|{nanos}|\n{MakeShift(number)}|";
             }
             return null;
         }

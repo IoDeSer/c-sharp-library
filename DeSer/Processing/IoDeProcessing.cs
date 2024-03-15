@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using IoDeSer.Attributes;
 using IoDeSer.Extensions;
@@ -101,7 +102,6 @@ namespace IoDeSer.DeSer.Processing
 
 
             string[] lines = ioString.Split('\n');
-
             for (int l = 0; l < lines.Length; l++)
             {
                 string _LINE = lines[l];
@@ -135,6 +135,7 @@ namespace IoDeSer.DeSer.Processing
                  */
                 if (assignment[1].Length>1)
                 {
+
                     FoundProperty.SetValue(obj, IoDes.ReadFromString(assignment[1].Trim(), FoundProperty.PropertyType));
                 }
                 /*
@@ -207,9 +208,12 @@ namespace IoDeSer.DeSer.Processing
                 ioString=DeleteTabulator(ioString);
                 string[] lines = ioString.Split('\n');
                 long s = IoFile.ReadFromString<long>(lines[0].Split("->")[1]);
-                long n = IoFile.ReadFromString<long>(lines[1].Split("->")[1]);
+                BigInteger n = IoFile.ReadFromString<BigInteger>(lines[1].Split("->")[1]);
 
-                return TimeSpan.FromTicks(n/100);
+                return TimeSpan.FromTicks((long)(n/100));
+            }else if (typeof(BigInteger).IsAssignableFrom(objectType))
+            {
+                return BigInteger.Parse(ioString);
             }
             return null;
         }

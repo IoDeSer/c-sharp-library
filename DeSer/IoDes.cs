@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using IoDeSer.DeSer.Processing;
 
@@ -20,6 +21,8 @@ namespace IoDeSer.DeSer
                         Console.WriteLine($"input: {ioString}\n\n");*/
             if (ioString == "|||") return null;
 
+            ErrorsCheck(ioString);
+
             Match ioMatch = ioPattern.Match(ioString);
             ioString = ioMatch.Groups[1].Value;
 
@@ -29,7 +32,7 @@ namespace IoDeSer.DeSer
                 return Convert.ChangeType(ioString, objectType);
             }
             else if (typeof(DateTime).IsAssignableFrom(objectType) || typeof(DateTimeOffset).IsAssignableFrom(objectType)
-                 || typeof(TimeSpan).IsAssignableFrom(objectType))
+                 || typeof(TimeSpan).IsAssignableFrom(objectType) || typeof(BigInteger).IsAssignableFrom(objectType))
             {
                 return IoDeProcessing.DeDateTime(ref ioString, objectType);
             }
@@ -50,6 +53,20 @@ namespace IoDeSer.DeSer
             else
                 throw new InvalidDataException($"Object of type {objectType} is not supported.");
 
+        }
+
+        private static void ErrorsCheck(string ioString)
+        {
+            if (String.IsNullOrEmpty(ioString))
+            {
+                throw new Exception("io string cannot be empty");
+            }
+
+            if (ioString[0] != '|' || ioString[ioString.Length-1] != '|')
+            {
+                throw new Exception("io string lacks vertical bars at the beggining or end");
+            }
+            //TODO add errors
         }
     }
 }
