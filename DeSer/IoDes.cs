@@ -5,6 +5,8 @@ using System.IO;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using IoDeSer.DeSer.Processing;
+using IoDeSer.Errors;
+using IoDeSer.Errors.Deserialization;
 
 namespace IoDeSer.DeSer
 {
@@ -51,20 +53,19 @@ namespace IoDeSer.DeSer
                 return IoDeProcessing.DeStruct(ref ioString, objectType);
             }
             else
-                throw new InvalidDataException($"Object of type {objectType} is not supported.");
-
+                throw new IoTypeNotSupportedException(objectType);
         }
 
         private static void ErrorsCheck(string ioString)
         {
             if (String.IsNullOrEmpty(ioString))
             {
-                throw new Exception("io string cannot be empty");
+                throw new IoEmptyStringException();
             }
 
             if (ioString[0] != '|' || ioString[ioString.Length-1] != '|')
             {
-                throw new Exception("io string lacks vertical bars at the beggining or end");
+                throw new IoVerticalBarsException();
             }
             //TODO add errors
         }

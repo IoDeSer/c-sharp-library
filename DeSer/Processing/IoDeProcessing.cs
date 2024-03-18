@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using IoDeSer.Attributes;
+using IoDeSer.Errors.Deserialization;
 using IoDeSer.Extensions;
 
 namespace IoDeSer.DeSer.Processing
@@ -86,7 +87,7 @@ namespace IoDeSer.DeSer.Processing
             }
             catch (System.MissingMethodException e)
             {
-                throw new MissingMethodException($"Object of type {objectType} must have parameterless constructor", e);
+                throw new IoMissingConstructorException(objectType, e);
             }
             ioString = DeleteTabulator(ioString);
 
@@ -124,7 +125,7 @@ namespace IoDeSer.DeSer.Processing
                 }
 
                 if (propertyIndex == -1)
-                    throw new InvalidCastException($"Object of type {objectType} does not have property named {variableName}.");
+                    throw new IoMissingPropertyException(objectType, variableName);
 
 
 

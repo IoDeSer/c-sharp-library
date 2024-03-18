@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using IoDeSer.DeSer.Processing;
+using IoDeSer.Errors;
 
 namespace IoDeSer.DeSer
 {
@@ -24,14 +25,17 @@ namespace IoDeSer.DeSer
             else if (typeof(IEnumerable).IsAssignableFrom(objectType))
             {
                 return IoSerProcessing.SerIEnumerable(obj, number);
-            } else if (typeof(DateTime).IsAssignableFrom(objectType) || typeof(DateTimeOffset).IsAssignableFrom(objectType)
-                 || typeof(TimeSpan).IsAssignableFrom(objectType)) {
+            }
+            else if (typeof(DateTime).IsAssignableFrom(objectType) || typeof(DateTimeOffset).IsAssignableFrom(objectType)
+                 || typeof(TimeSpan).IsAssignableFrom(objectType))
+            {
                 return IoSerProcessing.SerDateTime(obj, number);
             }
             else if (objectType.IsClass)
             {
                 return IoSerProcessing.SerClass(obj, number);
-            } else if (objectType.IsValueType)
+            }
+            else if (objectType.IsValueType)
             {
 
                 if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
@@ -39,7 +43,7 @@ namespace IoDeSer.DeSer
                 return IoSerProcessing.SerStruct(obj, number);
             }
             else
-                throw new NotSupportedException($"Object of type {objectType.Name} is not supported.");
+                throw new IoTypeNotSupportedException(objectType);
 
         }
     }
