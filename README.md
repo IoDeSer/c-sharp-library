@@ -14,7 +14,7 @@ Repository stores code for C# library that allows to read from and write to .io 
 
 ### Example usage
 
-```
+```cs
 using IoDeSer;
 using IoDeSer.Attributes;
 using IoDeSer.Attributes.Ordering;
