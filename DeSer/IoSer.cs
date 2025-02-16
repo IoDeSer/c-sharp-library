@@ -17,10 +17,14 @@ namespace IoDeSer.DeSer
             Type objectType = obj.GetType();
 
 
-            if (objectType.IsPrimitive || objectType == typeof(string))
+            if (objectType.IsPrimitive)
             {
                 // TODO in string check and change symbols '|', "->" and '+'
                 return $"|{obj}|";
+            }
+            else if (objectType == typeof(string))
+            {
+                return IoSerProcessing.SerString(obj as String);
             }
             else if (typeof(IEnumerable).IsAssignableFrom(objectType))
             {

@@ -28,10 +28,13 @@ namespace IoDeSer.DeSer
             Match ioMatch = ioPattern.Match(ioString);
             ioString = ioMatch.Groups[1].Value;
 
-            if (objectType.IsPrimitive || objectType == typeof(string))
+            if (objectType.IsPrimitive)
             {
                 // TODO in string check and change special tokens for '|', "->" and '+'
                 return Convert.ChangeType(ioString, objectType);
+            }else if (objectType == typeof(string))
+            {
+                return IoDeProcessing.DeString(ioString);
             }
             else if (typeof(DateTime).IsAssignableFrom(objectType) || typeof(DateTimeOffset).IsAssignableFrom(objectType)
                  || typeof(TimeSpan).IsAssignableFrom(objectType) || typeof(BigInteger).IsAssignableFrom(objectType))

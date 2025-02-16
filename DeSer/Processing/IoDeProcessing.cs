@@ -218,5 +218,10 @@ namespace IoDeSer.DeSer.Processing
             }
             return null;
         }
+
+        internal static object DeString(string ioString)
+        {
+            return ioString.UnescapeString();
+        }
     }
 }

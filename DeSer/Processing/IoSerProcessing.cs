@@ -7,11 +7,24 @@ using IoDeSer.Attributes.Ordering;
 using IoDeSer.Extensions;
 using IoDeSer.Helpers;
 using System.Numerics;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace IoDeSer.DeSer.Processing
 {
     internal static class IoSerProcessing
     {
+        public static uint GetLength(IEnumerable enumerable)
+        {
+            uint count = 0;
+            foreach (var item in enumerable)
+            {
+                count++;
+            }
+            return count;
+        }
+
         /// <summary>
         /// Returns <paramref name="number"/> of tabulators as string.
         /// </summary>
@@ -40,6 +53,9 @@ namespace IoDeSer.DeSer.Processing
                 return multiDimensionalArray.ToString();
                 
             }
+
+            if(GetLength(objArray) == 0)
+                return "||";
 
             foreach (var element in objArray)
             {
@@ -125,5 +141,14 @@ namespace IoDeSer.DeSer.Processing
             }
             return null;
         }
+
+        internal static string SerString(string obj)
+        {
+            var result = obj.EscapeString();
+
+            return $"|{result}|";
+        }
+
+       
     }
 }

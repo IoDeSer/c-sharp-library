@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace IoDeSer.Extensions
 {
@@ -38,6 +39,110 @@ namespace IoDeSer.Extensions
                 string[] splits = new string[count + 1];
                 return str.Split(splits, splitter, 0);
             }
+        }
+
+        internal static string EscapeString(this string input)
+        {
+            StringBuilder result = new StringBuilder();
+
+            foreach (char c in input)
+            {
+                switch (c)
+                {
+                    case '\u0008': // Backspace
+                        result.Append("\\b");
+                        break;
+                    case '\u000C': // Form feed
+                        result.Append("\\f");
+                        break;
+                    case '\n': // Newline
+                        result.Append("\\n");
+                        break;
+                    case '\r': // Carriage return
+                        result.Append("\\r");
+                        break;
+                    case '\t': // Tab
+                        result.Append("\\t");
+                        break;
+                    case '\'': // Single quote
+                        result.Append("\\'");
+                        break;
+                    case '\"': // Double quote
+                        result.Append("\\\"");
+                        break;
+                    case '\\': // Backslash
+                        result.Append("\\\\");
+                        break;
+                    case '\0': // Null character
+                        result.Append("\\0");
+                        break;
+                    case '|':
+                        result.Append("||");
+                        break;
+                    default:
+                        result.Append(c); // Append as-is for non-special characters
+                        break;
+                }
+            }
+
+            return result.ToString();
+        }
+
+        internal static string UnescapeString(this string input)
+        {
+            StringBuilder result = new StringBuilder();
+            bool isEscaping = false;
+
+            foreach (char c in input)
+            {
+                if (isEscaping)
+                {
+                    switch (c)
+                    {
+                        case 'b':
+                            result.Append('\u0008'); // Backspace
+                            break;
+                        case 'f':
+                            result.Append('\u000C'); // Form feed
+                            break;
+                        case 'n':
+                            result.Append('\n'); // Newline
+                            break;
+                        case 'r':
+                            result.Append('\r'); // Carriage return
+                            break;
+                        case 't':
+                            result.Append('\t'); // Tab
+                            break;
+                        case '\'':
+                            result.Append('\''); // Single quote
+                            break;
+                        case '\"':
+                            result.Append('\"'); // Double quote
+                            break;
+                        case '\\':
+                            result.Append('\\'); // Backslash
+                            break;
+                        case '0':
+                            result.Append('\0'); // Null character
+                            break;
+                        default:
+                            result.Append(c); // If unknown, append as-is
+                            break;
+                    }
+                    isEscaping = false; // Reset escaping flag
+                }
+                else if (c == '\\')
+                {
+                    isEscaping = true; // Start escape sequence
+                }
+                else
+                {
+                    result.Append(c); // Regular character
+                }
+            }
+
+            return result.Replace("||", "|").ToString();
         }
     }
 }
