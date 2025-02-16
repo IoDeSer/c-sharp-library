@@ -20,7 +20,8 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Improved error messages</PackageReleaseNotes>
+    <PackageReleaseNotes>Strings are now being (un)escaped with regard to special characters.
+Empty arrays are now saved in one line, instead of 3.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
