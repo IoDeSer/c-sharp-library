@@ -9,13 +9,18 @@ namespace IoDeSer.DeSer
 {
     internal static class IoSer
     {
+        internal static string Write(Type type, object obj, int number=0)
+        {
+            var ser = typeof(IoSer).GetMethod("WriteToString", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            return (string)ser.MakeGenericMethod(type).Invoke(null, new object[] { obj, number });
+        }
+
         internal static string WriteToString<T>(T obj, int number=0)
         {
             if (obj == null) return "|||";
                 //throw new ArgumentNullException(null, $"The passed object or some of its components are null.");
 
             Type objectType = obj.GetType();
-
 
             if (objectType.IsPrimitive)
             {

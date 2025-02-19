@@ -16,8 +16,8 @@ namespace IoDeSer.Helpers
 
             if (itemsOrder == null)
             {
-                var xOrder = x.GetCustomAttribute<IoItemOrderAttribute>() == null ? int.MaxValue : x.GetCustomAttribute<IoItemOrderAttribute>().Order;
-                var yOrder = y.GetCustomAttribute<IoItemOrderAttribute>() == null ? int.MaxValue : y.GetCustomAttribute<IoItemOrderAttribute>().Order;
+                var xOrder = x.GetCustomAttribute<IoItemOrderAttribute>() == null ? sbyte.MaxValue : x.GetCustomAttribute<IoItemOrderAttribute>().Order;
+                var yOrder = y.GetCustomAttribute<IoItemOrderAttribute>() == null ? sbyte.MaxValue : y.GetCustomAttribute<IoItemOrderAttribute>().Order;
                 return xOrder.CompareTo(yOrder);
             }
             else

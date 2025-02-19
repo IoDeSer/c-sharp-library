@@ -5,7 +5,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Io-Maciek</Authors>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>0.4.10</Version>
+    <Version>0.4.11</Version>
     <Description>De/Serialization of .io file format.</Description>
     <PackageProjectUrl>https://github.com/IoDeSer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -20,8 +20,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Strings are now being (un)escaped with regard to special characters.
-Empty arrays are now saved in one line, instead of 3.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed serialization with correct type using reflection and not System.Object.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,10 +36,6 @@ Empty arrays are now saved in one line, instead of 3.</PackageReleaseNotes>
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Extensions\Nowy folder\Nowy folder\" />
   </ItemGroup>
 
 </Project>

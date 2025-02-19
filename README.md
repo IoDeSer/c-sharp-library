@@ -74,19 +74,19 @@ Output:
         Addresses->|
                 |
                         City->|Hamburg|
-                        StreetName->|Strasse|
                         Number->|55|
+                        StreetName->|Strasse|
                 |
                 +
                 |
                         City->|Las Vegas|
-                        StreetName->|Black|
                         Number->|1549|
+                        StreetName->|Black|
                 |
         |
-        Age->|36|
-        FirstName->|John|
         Surname->|Smith|
+        Firstname->|John|
+        SecondName->|||
 |
  */
 ```

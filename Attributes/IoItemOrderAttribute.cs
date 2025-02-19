@@ -6,7 +6,7 @@ namespace IoDeSer.Attributes
     /// <summary>
     /// Changes the default order of properties in .io file. The ones with the lower value will precede those of higher value.
     /// <para>
-    /// Accepted value are from range of 1 to <see cref="uint.MaxValue"/>.
+    /// Accepted value are from range of 1 to <see cref="byte.MaxValue"/>.
     /// </para>
     /// <para>
     /// In the case of two or more properties having the same value, the default order prevails.
@@ -18,25 +18,25 @@ namespace IoDeSer.Attributes
         /// <value>
         /// Property order by integer.
         /// </value>
-        public int Order { get; }
+        public sbyte Order { get; }
 
         /// <summary>
         /// Initializes ordering of property by <seealso cref="ItemOrder"/>.
         /// </summary>
         public IoItemOrderAttribute(ItemOrder orderInFile)
         {
-            Order = (int)orderInFile;
+            Order = (sbyte)orderInFile;
         }
 
         /// <summary>
-        /// Initializes ordering of property using any number from 1 - <see cref="uint.MaxValue"/>.
+        /// Initializes ordering of property using any number from 1 - <see cref="byte.MaxValue"/>.
         /// <para>
         /// Number '0' is also allowed, but is causing error due to ambiguous call with constructor <see cref="IoItemOrderAttribute(ItemOrder)"/>.
         /// </para>
         /// </summary>
-        public IoItemOrderAttribute(uint orderInFile)
+        public IoItemOrderAttribute(byte orderInFile)
         {
-            Order = (int)orderInFile;
+            Order = (sbyte)orderInFile;
         }
     }
 }

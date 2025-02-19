@@ -8,10 +8,10 @@
         /// <summary>
         /// Indicates that this item should be first.
         /// </summary>
-        FIRST = int.MinValue,
+        FIRST = sbyte.MinValue,
         /// <summary>
         /// Indicates that this item should be last.
         /// </summary>
-        LAST = int.MaxValue
+        LAST = sbyte.MaxValue
     }
 }

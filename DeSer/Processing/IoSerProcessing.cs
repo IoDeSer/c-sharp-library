@@ -63,7 +63,7 @@ namespace IoDeSer.DeSer.Processing
                     arrayReturn += $"\n{MakeShift(number + 1)}+\n";
                 else
                     isFirst = false;
-                arrayReturn += MakeShift(number + 1) + IoSer.WriteToString(element, number + 1);
+                arrayReturn += MakeShift(number + 1) + IoSer.Write(element.GetType(), element, number + 1);
 
             }
             return $"|\n{arrayReturn}\n{MakeShift(number)}|";
@@ -86,10 +86,9 @@ namespace IoDeSer.DeSer.Processing
                 if (property.GetCustomAttribute<IoItemIgnoreAttribute>() == null)
                 {
                     var propertyValue = property.GetValue(obj);
-                    if (propertyValue != null)
-                    {
 
-
+                    //if (propertyValue != null)
+                    //{
                         IoItemNameAttribute ioNameOptionalAttribute = property.GetCustomAttribute<IoItemNameAttribute>();
                         string propertyName = ioNameOptionalAttribute != null ? ioNameOptionalAttribute.customPropertyName : property.Name;
 
@@ -98,9 +97,10 @@ namespace IoDeSer.DeSer.Processing
                             classReturn += "\n";
                         }
 
-                        classReturn += $"{MakeShift(number + 1)}{propertyName}->{IoSer.WriteToString(propertyValue, number + 1)}";
+
+                        classReturn += $"{MakeShift(number + 1)}{propertyName}->{IoSer.Write(property.PropertyType, propertyValue, number + 1)}";
                         isFirst = false;
-                    }
+                    //}
                 }
             }
             return $"|\n{classReturn}\n{MakeShift(number)}|";
@@ -110,11 +110,13 @@ namespace IoDeSer.DeSer.Processing
         {
             Type objectType = obj.GetType();
 
-            object key = objectType.GetProperty("Key").GetValue(obj);
-            object value = objectType.GetProperty("Value").GetValue(obj);
+            var keyProperty = objectType.GetProperty("Key");
+            object key = keyProperty.GetValue(obj);
+            var valueProperty = objectType.GetProperty("Value");
+            object value = valueProperty.GetValue(obj);
             Type[] types = objectType.GetGenericArguments();
 
-            return $"|\n{MakeShift(number + 1)}{IoSer.WriteToString(key, number + 1)}\n{MakeShift(number + 1)}+\n{MakeShift(number + 1)}{IoSer.WriteToString(value, number + 1)}\n{MakeShift(number)}|";
+            return $"|\n{MakeShift(number + 1)}{IoSer.Write(keyProperty.PropertyType, key, number + 1)}\n{MakeShift(number + 1)}+\n{MakeShift(number + 1)}{IoSer.Write(valueProperty.PropertyType, value, number + 1)}\n{MakeShift(number)}|";
         }
 
         internal static string SerStruct<T>(T obj, int number)
