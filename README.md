@@ -52,7 +52,7 @@ namespace ProgramNamespace
         public List<Address<T>> Addresses { get; set; }
     }
 
-    [IoItemsOrder(ItemsOrder.LONGEST_FIRST)]
+    [IoItemsOrder(ItemsOrder.SHORTEST_FIRST)]
     class Address<T>
     {
         public string City { get; set; }
