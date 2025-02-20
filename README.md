@@ -1,16 +1,32 @@
 [![Nuget](https://img.shields.io/nuget/v/IoDeSer?style=for-the-badge&label=IoDeSer&color=%23e6e62c)](https://www.nuget.org/packages/IoDeSer)
 
-# About
-Repository stores code for C# library that allows to read from and write to .io file format. Is written in .NET Standard 2.0
+# Introduction
+Repository stores code for C# library that allows to read from and write to .io file format. Written in .NET Standard 2.0
+
+### About
+.io file is a text format that contains serialized object. Each object is stored between two vertical bars *|X|* in one line for primitive object or more, for iterables and structures. It is build to be cross-platform, language-independent and human-readable.
+
+You can read more about .io de/serialization file format goal and mission [here](https://github.com/IoDeSer).
 
 ### Functions and plans
 - [X] Primitive types (int, char)
 - [X] Strings
-- [X] Classes
+- [X] Classes and structures
 - [X] Arrays (and jagged arrays)
-- [X] Any IEnumerable collection
-- [X] Combinations of all above
+- [X] Any IEnumerable collection (List)
+- [X] Dictionaries
+- [X] Dates and time
+- [X] Null 
 - [ ] Multidimensional arrays are planned
+
+## Capabilities
+- Serialization of [supported types](#functions-and-plans) to string or stream using static methods **WriteToString** / **WriteToFile**,
+- Deserialization of [supported types](#functions-and-plans) from or stream using static methods **ReadFromString** / **ReadFromFile**,
+- Renaming class properties in serialized string using **IoItemName** attribute,
+- Changing order of properties in class in serialized string using **IoItemOrder** (for specific property) / **IoItemsOrder** (for the whole class),
+- Ignoring public properties in serialization with **IoItemIgnore** attribute.
+
+Refer to [example](example-usage) below to see, how you can utilize those capabilities and how they affect the serialized string.
 
 ### Example usage
 
@@ -27,7 +43,7 @@ namespace ProgramNamespace
         [IoItemName("FirstName")]
         public string Name { get; set; }
         [IoItemOrder(ItemOrder.LAST)]
-        public string? SecondName { get; set; }
+        public string SecondName { get; set; }
         [IoItemName("Surname")]
         public string LastName { get; set; }
         [IoItemOrder(2)]
