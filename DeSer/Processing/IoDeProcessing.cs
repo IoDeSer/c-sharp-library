@@ -134,7 +134,7 @@ namespace IoDeSer.DeSer.Processing
                 /*
                  * Primitive types and string are in the same line as property name
                  */
-                if (assignment[1].Length>1)
+                if (assignment[1].Length > 1)
                 {
 
                     FoundProperty.SetValue(obj, IoDes.ReadFromString(assignment[1].Trim(), FoundProperty.PropertyType));
@@ -206,13 +206,14 @@ namespace IoDeSer.DeSer.Processing
             }
             else if (typeof(TimeSpan).IsAssignableFrom(objectType))
             {
-                ioString=DeleteTabulator(ioString);
+                ioString = DeleteTabulator(ioString);
                 string[] lines = ioString.Split('\n');
                 long s = IoFile.ReadFromString<long>(lines[0].Split("->")[1]);
                 BigInteger n = IoFile.ReadFromString<BigInteger>(lines[1].Split("->")[1]);
 
-                return TimeSpan.FromTicks((long)(n/100));
-            }else if (typeof(BigInteger).IsAssignableFrom(objectType))
+                return TimeSpan.FromTicks((long)(n / 100));
+            }
+            else if (typeof(BigInteger).IsAssignableFrom(objectType))
             {
                 return BigInteger.Parse(ioString);
             }
@@ -222,6 +223,30 @@ namespace IoDeSer.DeSer.Processing
         internal static object DeString(string ioString)
         {
             return ioString.UnescapeString();
+        }
+
+        internal static object DeEnum(ref string ioString, Type objectType)
+        {
+            ioString = DeleteTabulator(ioString);
+            string[] io_split = ioString.Split("->");
+
+            string name = io_split[0];
+            string split_null = io_split[1];
+
+            if (split_null != "|||")
+            {
+
+                throw new Exception($"Enum value must be null (\"|||\"), but is equal to \"{split_null}\"");
+            }
+
+            try
+            {
+                return Enum.Parse(objectType, name);
+            }
+            catch (System.ArgumentException e)
+            {
+                throw new Exception($"Enum \"{objectType.Name}\" does not have member \"{name}\".", e);
+            }
         }
     }
 }

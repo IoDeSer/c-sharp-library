@@ -5,7 +5,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Io-Maciek</Authors>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>0.4.11</Version>
+    <Version>0.5.0</Version>
     <Description>De/Serialization of .io file format.</Description>
     <PackageProjectUrl>https://github.com/IoDeSer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -20,7 +20,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Fixed serialization with correct type using reflection and not System.Object.</PackageReleaseNotes>
+    <PackageReleaseNotes>Added de/serialization of Enums.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

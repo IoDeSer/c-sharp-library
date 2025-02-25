@@ -22,37 +22,36 @@ namespace IoDeSer.DeSer
 
             Type objectType = obj.GetType();
 
-            if (objectType.IsPrimitive)
+            switch (objectType)
             {
-                // TODO in string check and change symbols '|', "->" and '+'
-                return $"|{obj}|";
-            }
-            else if (objectType == typeof(string))
-            {
-                return IoSerProcessing.SerString(obj as String);
-            }
-            else if (typeof(IEnumerable).IsAssignableFrom(objectType))
-            {
-                return IoSerProcessing.SerIEnumerable(obj, number);
-            }
-            else if (typeof(DateTime).IsAssignableFrom(objectType) || typeof(DateTimeOffset).IsAssignableFrom(objectType)
-                 || typeof(TimeSpan).IsAssignableFrom(objectType))
-            {
-                return IoSerProcessing.SerDateTime(obj, number);
-            }
-            else if (objectType.IsClass)
-            {
-                return IoSerProcessing.SerClass(obj, number);
-            }
-            else if (objectType.IsValueType)
-            {
+                case Type t when t.IsPrimitive:
+                    return $"|{obj}|";
 
-                if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-                    return IoSerProcessing.SerDictionary(obj, number);
-                return IoSerProcessing.SerStruct(obj, number);
+                case Type t when t == typeof(string):
+                    return IoSerProcessing.SerString(obj as string);
+
+                case Type t when typeof(IEnumerable).IsAssignableFrom(t):
+                    return IoSerProcessing.SerIEnumerable(obj, number);
+
+                case Type t when typeof(DateTime).IsAssignableFrom(t) ||
+                                  typeof(DateTimeOffset).IsAssignableFrom(t) ||
+                                  typeof(TimeSpan).IsAssignableFrom(t):
+                    return IoSerProcessing.SerDateTime(obj, number);
+
+                case Type t when t.IsClass:
+                    return IoSerProcessing.SerClass(obj, number);
+
+                case Type t when t.IsEnum:
+                    return IoSerProcessing.SerEnum(obj, number);
+
+                case Type t when t.IsValueType:
+                    if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                        return IoSerProcessing.SerDictionary(obj, number);
+                    return IoSerProcessing.SerStruct(obj, number);
+
+                default:
+                    throw new IoTypeNotSupportedException(objectType);
             }
-            else
-                throw new IoTypeNotSupportedException(objectType);
 
         }
     }

@@ -28,35 +28,38 @@ namespace IoDeSer.DeSer
             Match ioMatch = ioPattern.Match(ioString);
             ioString = ioMatch.Groups[1].Value;
 
-            if (objectType.IsPrimitive)
+            switch (objectType)
             {
-                // TODO in string check and change special tokens for '|', "->" and '+'
-                return Convert.ChangeType(ioString, objectType);
-            }else if (objectType == typeof(string))
-            {
-                return IoDeProcessing.DeString(ioString);
+                case Type t when t.IsPrimitive:
+                    return Convert.ChangeType(ioString, t);
+
+                case Type t when t == typeof(string):
+                    return IoDeProcessing.DeString(ioString);
+
+                case Type t when typeof(DateTime).IsAssignableFrom(t) ||
+                                      typeof(DateTimeOffset).IsAssignableFrom(t) ||
+                                      typeof(TimeSpan).IsAssignableFrom(t) ||
+                                      typeof(BigInteger).IsAssignableFrom(t):
+                    return IoDeProcessing.DeDateTime(ref ioString, t);
+
+                case Type t when typeof(IEnumerable).IsAssignableFrom(t):
+                    return IoDeProcessing.DeIEnumerable(ref ioString, t);
+
+                case Type t when t.IsClass:
+                    return IoDeProcessing.DeClass(ref ioString, t);
+
+                case Type t when t.IsEnum:
+                    return IoDeProcessing.DeEnum(ref ioString, t);
+
+                case Type t when t.IsValueType && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(KeyValuePair<,>):
+                    return IoDeProcessing.DeDictionary(ref ioString, t);
+
+                case Type t when t.IsValueType:
+                    return IoDeProcessing.DeStruct(ref ioString, t);
+
+                default:
+                    throw new IoTypeNotSupportedException(objectType);
             }
-            else if (typeof(DateTime).IsAssignableFrom(objectType) || typeof(DateTimeOffset).IsAssignableFrom(objectType)
-                 || typeof(TimeSpan).IsAssignableFrom(objectType) || typeof(BigInteger).IsAssignableFrom(objectType))
-            {
-                return IoDeProcessing.DeDateTime(ref ioString, objectType);
-            }
-            else if (typeof(IEnumerable).IsAssignableFrom(objectType))
-            {
-                return IoDeProcessing.DeIEnumerable(ref ioString,  objectType);
-            }
-            else if (objectType.IsClass)
-            {
-                return IoDeProcessing.DeClass(ref ioString, objectType);
-            }
-            else if (objectType.IsValueType)
-            {
-                if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-                    return IoDeProcessing.DeDictionary(ref ioString, objectType);
-                return IoDeProcessing.DeStruct(ref ioString, objectType);
-            }
-            else
-                throw new IoTypeNotSupportedException(objectType);
         }
 
         private static void ErrorsCheck(string ioString)

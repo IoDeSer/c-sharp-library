@@ -51,10 +51,10 @@ namespace IoDeSer.DeSer.Processing
                 MultidimensionalArray multiDimensionalArray = new MultidimensionalArray(tryArray, number);
 
                 return multiDimensionalArray.ToString();
-                
+
             }
 
-            if(GetLength(objArray) == 0)
+            if (GetLength(objArray) == 0)
                 return "||";
 
             foreach (var element in objArray)
@@ -69,7 +69,7 @@ namespace IoDeSer.DeSer.Processing
             return $"|\n{arrayReturn}\n{MakeShift(number)}|";
         }
 
-        
+
 
 
         internal static string SerClass<T>(T obj, int number)
@@ -89,17 +89,17 @@ namespace IoDeSer.DeSer.Processing
 
                     //if (propertyValue != null)
                     //{
-                        IoItemNameAttribute ioNameOptionalAttribute = property.GetCustomAttribute<IoItemNameAttribute>();
-                        string propertyName = ioNameOptionalAttribute != null ? ioNameOptionalAttribute.customPropertyName : property.Name;
+                    IoItemNameAttribute ioNameOptionalAttribute = property.GetCustomAttribute<IoItemNameAttribute>();
+                    string propertyName = ioNameOptionalAttribute != null ? ioNameOptionalAttribute.customPropertyName : property.Name;
 
-                        if (!isFirst)
-                        {
-                            classReturn += "\n";
-                        }
+                    if (!isFirst)
+                    {
+                        classReturn += "\n";
+                    }
 
 
-                        classReturn += $"{MakeShift(number + 1)}{propertyName}->{IoSer.Write(property.PropertyType, propertyValue, number + 1)}";
-                        isFirst = false;
+                    classReturn += $"{MakeShift(number + 1)}{propertyName}->{IoSer.Write(property.PropertyType, propertyValue, number + 1)}";
+                    isFirst = false;
                     //}
                 }
             }
@@ -129,7 +129,8 @@ namespace IoDeSer.DeSer.Processing
             if (typeof(DateTime).IsAssignableFrom(obj.GetType()))
             {
                 return ((DateTime)(obj as object)).ToString("|yyyy-MM-dd'T'HH:mm:ss.fffK|");
-            }else if (typeof(DateTimeOffset).IsAssignableFrom(obj.GetType()))
+            }
+            else if (typeof(DateTimeOffset).IsAssignableFrom(obj.GetType()))
             {
                 return ((DateTimeOffset)(obj as object)).ToString("|yyyy-MM-dd'T'HH:mm:ss.fffK|");
             }
@@ -138,19 +139,14 @@ namespace IoDeSer.DeSer.Processing
                 TimeSpan span = (TimeSpan)(obj as object);
                 BigInteger nanos = new BigInteger(span.Ticks) * 100;
                 //long nanos = span.Ticks * 100;
-                
+
                 return $"|\n{MakeShift(number + 1)}seconds->|{(long)span.TotalSeconds}|\n{MakeShift(number + 1)}nanoseconds->|{nanos}|\n{MakeShift(number)}|";
             }
             return null;
         }
 
-        internal static string SerString(string obj)
-        {
-            var result = obj.EscapeString();
+        internal static string SerString(string obj) => $"|{obj.EscapeString()}|";
 
-            return $"|{result}|";
-        }
-
-       
+        internal static string SerEnum<T>(T obj, int number) => $"|\n{MakeShift(number + 1)}{obj}->|||\n{MakeShift(number)}|";
     }
 }
