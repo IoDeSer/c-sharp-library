@@ -20,7 +20,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Added de/serialization of Enums.</PackageReleaseNotes>
+    <PackageReleaseNotes>Added support for de/serialization of Enums.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
