@@ -1,86 +1,54 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text;
 
 namespace IoDeSer.Extensions
 {
     internal static class StringExtension
     {
-        static string[] Split(this string str, string[] splits, string splitter, int next)
-        {
-            int indexOf = str.IndexOf(splitter);
-            int start = indexOf + splitter.Length;
-            int end = str.Length - (indexOf + splitter.Length);
-
-            if (indexOf == -1)
-            {
-                splits[next] = str;
-                return splits;
-            }
-            else
-            {
-                string strNew = str.Substring(0, indexOf);
-                splits[next] = strNew;
-                next++;
-                str.Substring(start, end).Split(splits, splitter, next);
-                return splits;
-            }
-        }
-
-
-        internal static string[] Split(this string str, string splitter)
-        {
-            Regex regex = new Regex(Regex.Escape(splitter));
-            int count = regex.Matches(str).Count;
-
-            if (count == 0)
-                return new string[0];
-            else
-            {
-                string[] splits = new string[count + 1];
-                return str.Split(splits, splitter, 0);
-            }
-        }
-
+        /// <summary>
+        /// Escapes content of <c>s|..|</c> and <c>c|..|</c> the same way as Rust library does:
+        /// <c>\t \r \n \\ \' \" \0</c>, other control characters as <c>\u{XX}</c>
+        /// and characters with special meaning: <c>|</c> as <c>\|</c>, <c>+</c> as <c>\+</c> and <c>-></c> as <c>-\></c>.
+        /// </summary>
         internal static string EscapeString(this string input)
         {
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new StringBuilder(input.Length);
 
-            foreach (char c in input)
+            for (int i = 0; i < input.Length; i++)
             {
+                char c = input[i];
                 switch (c)
                 {
-                    case '\u0008': // Backspace
-                        result.Append("\\b");
-                        break;
-                    case '\u000C': // Form feed
-                        result.Append("\\f");
-                        break;
-                    case '\n': // Newline
-                        result.Append("\\n");
-                        break;
-                    case '\r': // Carriage return
-                        result.Append("\\r");
-                        break;
-                    case '\t': // Tab
-                        result.Append("\\t");
-                        break;
-                    case '\'': // Single quote
-                        result.Append("\\'");
-                        break;
-                    case '\"': // Double quote
-                        result.Append("\\\"");
-                        break;
-                    case '\\': // Backslash
-                        result.Append("\\\\");
-                        break;
-                    case '\0': // Null character
-                        result.Append("\\0");
-                        break;
-                    case '|':
-                        result.Append("||");
+                    case '\t': result.Append("\\t"); break;
+                    case '\r': result.Append("\\r"); break;
+                    case '\n': result.Append("\\n"); break;
+                    case '\\': result.Append("\\\\"); break;
+                    case '\'': result.Append("\\'"); break;
+                    case '\"': result.Append("\\\""); break;
+                    case '\0': result.Append("\\0"); break;
+                    case '|': result.Append("\\|"); break;
+                    case '+': result.Append("\\+"); break;
+                    case '>':
+                        if (result.Length > 0 && result[result.Length - 1] == '-')
+                            result.Append("\\>");
+                        else
+                            result.Append('>');
                         break;
                     default:
-                        result.Append(c); // Append as-is for non-special characters
+                        if (char.IsHighSurrogate(c) && i + 1 < input.Length && char.IsLowSurrogate(input[i + 1]))
+                        {
+                            result.Append(c).Append(input[i + 1]);
+                            i++;
+                        }
+                        else if (char.IsControl(c) || char.IsSurrogate(c))
+                        {
+                            // lone surrogate is not a valid character in other languages
+                            result.Append("\\u{").Append(((int)c).ToString("x")).Append('}');
+                        }
+                        else
+                        {
+                            result.Append(c);
+                        }
                         break;
                 }
             }
@@ -88,61 +56,63 @@ namespace IoDeSer.Extensions
             return result.ToString();
         }
 
+        /// <summary>
+        /// Reverses <see cref="EscapeString"/>. Unknown escape sequences are kept as the escaped character.
+        /// </summary>
         internal static string UnescapeString(this string input)
         {
-            StringBuilder result = new StringBuilder();
-            bool isEscaping = false;
+            if (input.IndexOf('\\') < 0)
+                return input;
 
-            foreach (char c in input)
+            StringBuilder result = new StringBuilder(input.Length);
+
+            for (int i = 0; i < input.Length; i++)
             {
-                if (isEscaping)
+                char c = input[i];
+                if (c != '\\')
                 {
-                    switch (c)
-                    {
-                        case 'b':
-                            result.Append('\u0008'); // Backspace
-                            break;
-                        case 'f':
-                            result.Append('\u000C'); // Form feed
-                            break;
-                        case 'n':
-                            result.Append('\n'); // Newline
-                            break;
-                        case 'r':
-                            result.Append('\r'); // Carriage return
-                            break;
-                        case 't':
-                            result.Append('\t'); // Tab
-                            break;
-                        case '\'':
-                            result.Append('\''); // Single quote
-                            break;
-                        case '\"':
-                            result.Append('\"'); // Double quote
-                            break;
-                        case '\\':
-                            result.Append('\\'); // Backslash
-                            break;
-                        case '0':
-                            result.Append('\0'); // Null character
-                            break;
-                        default:
-                            result.Append(c); // If unknown, append as-is
-                            break;
-                    }
-                    isEscaping = false; // Reset escaping flag
+                    result.Append(c);
+                    continue;
                 }
-                else if (c == '\\')
+
+                i++;
+                if (i >= input.Length)
+                    break;
+
+                switch (input[i])
                 {
-                    isEscaping = true; // Start escape sequence
-                }
-                else
-                {
-                    result.Append(c); // Regular character
+                    case 'b': result.Append('\u0008'); break;
+                    case 'f': result.Append('\u000C'); break;
+                    case 'n': result.Append('\n'); break;
+                    case 'r': result.Append('\r'); break;
+                    case 't': result.Append('\t'); break;
+                    case '0': result.Append('\0'); break;
+                    case 'u':
+                        // \u{XXXX}
+                        int end = input.IndexOf('}', i);
+                        if (i + 1 < input.Length && input[i + 1] == '{' && end > i + 2
+                            && int.TryParse(input.Substring(i + 2, end - i - 2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int code)
+                            && code >= 0 && code <= 0x10FFFF)
+                        {
+                            if (code >= 0xD800 && code <= 0xDFFF)
+                                result.Append((char)code);
+                            else
+                                result.Append(char.ConvertFromUtf32(code));
+                            i = end;
+                        }
+                        else
+                        {
+                            result.Append('u');
+                        }
+                        break;
+                    default:
+                        // \| \+ \> \\ \' \"
+                        result.Append(input[i]);
+                        break;
                 }
             }
 
-            return result.Replace("||", "|").ToString();
+            return result.ToString();
         }
     }
 }

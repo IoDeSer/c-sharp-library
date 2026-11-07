@@ -1,251 +1,275 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using IoDeSer.Attributes;
+using IoDeSer.Errors;
 using IoDeSer.Errors.Deserialization;
-using IoDeSer.Extensions;
+using IoDeSer.Helpers;
 
 namespace IoDeSer.DeSer.Processing
 {
     internal static class IoDeProcessing
     {
         /// <summary>
-        /// Returns <paramref name="str"/> without leading tabulators.
+        /// Value of unknown type (property of type <see cref="object"/>), chosen by the tag:
+        /// i - long (or BigInteger), f - double, b - bool, c - char, s - string, a - List&lt;object&gt;,
+        /// m - Dictionary&lt;object, object&gt;, o - Dictionary&lt;string, object&gt;, e - KeyValuePair&lt;string, object&gt;.
         /// </summary>
-        static string DeleteTabulator(string str)
+        internal static object DeObject(IoValue value)
         {
-            string ret = "";
-            string[] lines = str.Split('\n');
-            for (int i = 0; i < lines.Length; i++)
+            switch (value.Tag)
             {
-                if (lines[i].Length > 1)
-                    ret += $"{lines[i].Substring(1)}\n";
+                case 'i':
+                    BigInteger big = (BigInteger)IoDes.Read(value, typeof(BigInteger));
+                    if (big >= long.MinValue && big <= long.MaxValue)
+                        return (long)big;
+                    return big;
+                case 'f': return IoDes.Read(value, typeof(double));
+                case 'b': return IoDes.Read(value, typeof(bool));
+                case 'c': return IoDes.Read(value, typeof(char));
+                case 's': return IoDes.Read(value, typeof(string));
+                case 'a': return IoDes.Read(value, typeof(List<object>));
+                case 'm': return IoDes.Read(value, typeof(Dictionary<object, object>));
+                case 'o':
+                    return value.ExpectObject(typeof(object)).ToDictionary(f => f.Key, f => DeObject(f.Value));
+                case 'e':
+                    IoEnum e = value.ExpectEnum(typeof(object));
+                    return new KeyValuePair<string, object>(e.Variant, IoDes.Read(e.Value, typeof(object)));
+                default:
+                    return null;
             }
-
-            ret = ret.Trim();
-            return ret;
         }
 
-
-        internal static object DeIEnumerable(ref string ioString, Type objectType)
+        internal static object DeArray(IoValue value, Type objectType)
         {
-            ioString = DeleteTabulator(ioString);
+            Type elementType = objectType.GetElementType();
+            IReadOnlyList<IoValue> items = value.ExpectArray(objectType);
 
-            string[] objects = ioString.Split("\n+\n").ToArray();
-            if (objects.Length == 0)
+            Array array = Array.CreateInstance(elementType, items.Count);
+            for (int i = 0; i < items.Count; i++)
+                array.SetValue(IoDes.Read(items[i], elementType), i);
+            return array;
+        }
+
+        /// <summary>
+        /// Reads nested arrays into int[x,y,..]. All nested arrays on the same level must have the same length.
+        /// </summary>
+        internal static object DeMultidimensionalArray(IoValue value, Type objectType)
+        {
+            int rank = objectType.GetArrayRank();
+            int[] lengths = new int[rank];
+
+            IoValue level = value;
+            for (int r = 0; r < rank; r++)
             {
-                if (string.IsNullOrEmpty(ioString))
-                    objects = new string[0];
-                else
-                    objects = new string[1] { ioString };
+                IReadOnlyList<IoValue> items = level.ExpectArray(objectType);
+                lengths[r] = items.Count;
+                if (items.Count == 0)
+                    break;
+                level = items[0];
             }
+
+            Array array = Array.CreateInstance(objectType.GetElementType(), lengths);
+            FillDimension(array, value, new int[rank], 0, objectType);
+            return array;
+        }
+
+        static void FillDimension(Array array, IoValue value, int[] indices, int dimension, Type objectType)
+        {
+            IReadOnlyList<IoValue> items = value.ExpectArray(array.GetLength(dimension), objectType);
+            for (int i = 0; i < items.Count; i++)
+            {
+                indices[dimension] = i;
+                if (dimension == array.Rank - 1)
+                    array.SetValue(IoDes.Read(items[i], objectType.GetElementType()), indices);
+                else
+                    FillDimension(array, items[i], indices, dimension + 1, objectType);
+            }
+        }
+
+        internal static object DeIEnumerable(IoValue value, Type objectType)
+        {
+            Type elementType = IoTypes.ElementType(objectType);
+            IReadOnlyList<IoValue> items = value.ExpectArray(objectType);
+
+            Type listType = typeof(List<>).MakeGenericType(elementType);
+            IList list = (IList)Activator.CreateInstance(listType);
+            foreach (IoValue item in items)
+                list.Add(IoDes.Read(item, elementType));
+
+            if (objectType.IsAssignableFrom(listType))
+                return list;
+
+            if (objectType.IsInterface || objectType.IsAbstract)
+            {
+                Type setType = typeof(HashSet<>).MakeGenericType(elementType);
+                if (objectType.IsAssignableFrom(setType))
+                    return Activator.CreateInstance(setType, list);
+                throw new IoTypeNotSupportedException(objectType);
+            }
+
+            // Stack enumerates from the top, but its constructor pushes in order
+            if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(Stack<>))
+                listType.GetMethod("Reverse", Type.EmptyTypes).Invoke(list, null);
+
+            return CreateCollection(objectType, list, listType, elementType);
+        }
+
+        /// <summary>
+        /// Creates collection using constructor that accepts list (IEnumerable&lt;T&gt;, IList&lt;T&gt;...) or parameterless constructor and Add method.
+        /// </summary>
+        static object CreateCollection(Type objectType, object list, Type listType, params Type[] addParameters)
+        {
+            ConstructorInfo fromList = objectType.GetConstructors()
+                .FirstOrDefault(c => c.GetParameters().Length == 1 && c.GetParameters()[0].ParameterType.IsAssignableFrom(listType));
+            if (fromList != null)
+                return fromList.Invoke(new[] { list });
+
+            MethodInfo add = objectType.GetMethod("Add", addParameters);
+            if (add != null && objectType.GetConstructor(Type.EmptyTypes) != null)
+            {
+                object collection = Activator.CreateInstance(objectType);
+                foreach (object item in (IEnumerable)list)
+                {
+                    if (addParameters.Length == 2)
+                    {
+                        Type itemType = item.GetType();
+                        add.Invoke(collection, new[] { itemType.GetProperty("Key").GetValue(item), itemType.GetProperty("Value").GetValue(item) });
+                    }
+                    else
+                    {
+                        add.Invoke(collection, new[] { item });
+                    }
+                }
+                return collection;
+            }
+
+            throw new IoTypeNotSupportedException(objectType);
+        }
+
+        internal static object DeDictionary(IoValue value, Type objectType)
+        {
+            Type[] types = IoTypes.DictionaryTypes(objectType);
+            Type dictionaryType = typeof(Dictionary<,>).MakeGenericType(types);
+            IDictionary dictionary = (IDictionary)Activator.CreateInstance(dictionaryType);
+
+            foreach (var entry in value.ExpectMap(objectType))
+            {
+                object key = IoDes.Read(entry.Key, types[0]);
+                if (key == null)
+                    throw new IoDeserializationException($"Key of '{objectType.Name}' cannot be null.");
+                if (dictionary.Contains(key))
+                    throw new IoDeserializationException($"Key {entry.Key} is defined more than once in '{objectType.Name}'.");
+                dictionary.Add(key, IoDes.Read(entry.Value, types[1]));
+            }
+
+            if (objectType.IsAssignableFrom(dictionaryType))
+                return dictionary;
+            if (objectType.IsInterface || objectType.IsAbstract)
+                throw new IoTypeNotSupportedException(objectType);
+
+            return CreateCollection(objectType, dictionary, dictionaryType, types);
+        }
+
+        internal static object DeTuple(IoValue value, Type objectType)
+        {
+            Type[] types = objectType.GetGenericArguments();
+            if (types.Length > 7)
+                throw new IoTypeNotSupportedException(objectType);
+
+            IReadOnlyList<IoValue> items = value.ExpectArray(types.Length, objectType);
+            object[] values = new object[types.Length];
+            for (int i = 0; i < types.Length; i++)
+                values[i] = IoDes.Read(items[i], types[i]);
+
+            return Activator.CreateInstance(objectType, values);
+        }
+
+        internal static object DeClass(IoValue value, Type objectType)
+        {
+            IReadOnlyList<KeyValuePair<string, IoValue>> fields = value.ExpectObject(objectType);
 
             object obj;
-
-            if (objectType.IsArray)
-            {
-                obj = Array.CreateInstance(objectType.GetElementType(), objects.Length);
-
-                for (int i = 0; i < objects.Length; i++)
-                {
-                    (obj as Array).SetValue(IoDes.ReadFromString(objects[i].Trim(), objectType.GetElementType()), i);
-                }
-            }
-            else
-            {
-                Type elementType = objectType.GetInterfaces()
-                    .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                    .Select(t => t.GetGenericArguments()[0])
-                    .FirstOrDefault();
-
-
-                obj = Activator.CreateInstance(objectType);
-
-                for (int i = 0; i < objects.Length; i++)
-                {
-                    var input_data = IoDes.ReadFromString(objects[i].Trim(), elementType);
-                    var temp = typeof(Enumerable).GetMethod("Append").MakeGenericMethod(elementType)
-                        .Invoke(obj, new object[] { obj, input_data });
-
-                    obj = Activator.CreateInstance(objectType, temp);
-                }
-                // TODO check for erros, at first glance it works?
-            }
-
-            return obj;
-        }
-
-        internal static object DeClass(ref string ioString, Type objectType)
-        {
-            object obj = null;
-
             try
             {
                 obj = Activator.CreateInstance(objectType);
             }
-            catch (System.MissingMethodException e)
+            catch (MissingMethodException e)
             {
                 throw new IoMissingConstructorException(objectType, e);
             }
-            ioString = DeleteTabulator(ioString);
 
+            Dictionary<string, PropertyInfo> properties = new Dictionary<string, PropertyInfo>();
+            foreach (PropertyInfo property in IoTypes.IoProperties(objectType))
+                properties[IoTypes.IoName(property)] = property;
 
-            PropertyInfo[] properties = obj.GetType().GetProperties();
-            string[] propertiesStrings = new string[properties.Length];
-
-            for (int i = 0; i < properties.Length; i++)
+            // fields are matched by name, so their order does not matter
+            foreach (var field in fields)
             {
-                IoItemNameAttribute ioNameOptionalAttribute = properties[i].GetCustomAttribute<IoItemNameAttribute>();
-                propertiesStrings[i] = ioNameOptionalAttribute != null ? ioNameOptionalAttribute.customPropertyName : properties[i].Name;
-            }
+                if (!properties.TryGetValue(field.Key, out PropertyInfo property))
+                    throw new IoMissingPropertyException(objectType, field.Key);
 
-
-            string[] lines = ioString.Split('\n');
-            for (int l = 0; l < lines.Length; l++)
-            {
-                string _LINE = lines[l];
-                string[] assignment = _LINE.Split("->");
-
-                if (assignment.Length == 0)
+                // properties without setter (e.g. calculated ones) are written, but not read
+                if (property.GetSetMethod(true) == null)
                     continue;
 
-                string variableName = assignment[0].Trim();
-                int propertyIndex = -1;
-
-
-                for (int z = 0; z < propertiesStrings.Length; z++)
-                {
-                    if (variableName == propertiesStrings[z])
-                    {
-                        propertyIndex = z;
-                        break;
-                    }
-                }
-
-                if (propertyIndex == -1)
-                    throw new IoMissingPropertyException(objectType, variableName);
-
-
-
-                PropertyInfo FoundProperty = properties[propertyIndex];
-
-                /*
-                 * Primitive types and string are in the same line as property name
-                 */
-                if (assignment[1].Length > 1)
-                {
-
-                    FoundProperty.SetValue(obj, IoDes.ReadFromString(assignment[1].Trim(), FoundProperty.PropertyType));
-                }
-                /*
-                 * Classes and arrays are in new lines
-                 */
-                else
-                {
-                    if (lines[l + 1] == "|")
-                    {
-                        l++;
-                        FoundProperty.SetValue(obj, IoDes.ReadFromString("|\n\t\n|", FoundProperty.PropertyType));
-                        continue;
-                    }
-
-                    l++;
-
-                    int newObjectStart = l;
-                    do
-                    {
-                        l++;
-                    } while (lines[l] != "|");
-
-
-                    int newObjectEnd = l;
-                    string newObjectString = "|\n";
-
-                    for (int l2 = newObjectStart; l2 < newObjectEnd; l2++)
-                    {
-                        newObjectString += lines[l2] + "\n";
-                    }
-                    newObjectString += "\n|";
-
-                    FoundProperty.SetValue(obj, IoDes.ReadFromString(newObjectString.Trim(), FoundProperty.PropertyType));
-
-                }
-
+                property.SetValue(obj, IoDes.Read(field.Value, property.PropertyType));
             }
 
             return obj;
         }
 
-        internal static object DeDictionary(ref string ioString, Type objectType)
+        /// <summary>
+        /// Reads o| seconds->i|..| nanoseconds->i|..| |, the same as Duration in Rust.
+        /// </summary>
+        internal static object DeTimeSpan(IoValue value)
         {
-            ioString = DeleteTabulator(ioString);
-            string[] keyValue = ioString.Split("\n+\n");
+            long? seconds = null;
+            long? nanoseconds = null;
 
-            object k = IoDes.ReadFromString(keyValue[0], objectType.GetGenericArguments()[0]);
-            object v = IoDes.ReadFromString(keyValue[1], objectType.GetGenericArguments()[1]);
-
-            return Activator.CreateInstance(objectType, k, v);
-        }
-
-        internal static object DeStruct(ref string ioString, Type objectType)
-        {
-            return DeClass(ref ioString, objectType);
-        }
-
-        internal static object DeDateTime(ref string ioString, Type objectType)
-        {
-            if (typeof(DateTime).IsAssignableFrom(objectType))
+            foreach (var field in value.ExpectObject(typeof(TimeSpan)))
             {
-                return DateTime.Parse(ioString);
+                if (field.Key == "seconds")
+                    seconds = (long)IoDes.Read(field.Value, typeof(long));
+                else if (field.Key == "nanoseconds")
+                    nanoseconds = (long)IoDes.Read(field.Value, typeof(long));
+                else
+                    throw new IoMissingPropertyException(typeof(TimeSpan), field.Key);
             }
-            else if (typeof(DateTimeOffset).IsAssignableFrom(objectType))
-            {
-                return DateTimeOffset.Parse(ioString);
-            }
-            else if (typeof(TimeSpan).IsAssignableFrom(objectType))
-            {
-                ioString = DeleteTabulator(ioString);
-                string[] lines = ioString.Split('\n');
-                long s = IoFile.ReadFromString<long>(lines[0].Split("->")[1]);
-                BigInteger n = IoFile.ReadFromString<BigInteger>(lines[1].Split("->")[1]);
 
-                return TimeSpan.FromTicks((long)(n / 100));
-            }
-            else if (typeof(BigInteger).IsAssignableFrom(objectType))
-            {
-                return BigInteger.Parse(ioString);
-            }
-            return null;
-        }
-
-        internal static object DeString(string ioString)
-        {
-            return ioString.UnescapeString();
-        }
-
-        internal static object DeEnum(ref string ioString, Type objectType)
-        {
-            ioString = DeleteTabulator(ioString);
-            string[] io_split = ioString.Split("->");
-
-            string name = io_split[0];
-            string split_null = io_split[1];
-
-            if (split_null != "|||")
-            {
-
-                throw new Exception($"Enum value must be null (\"|||\"), but is equal to \"{split_null}\"");
-            }
+            if (seconds == null || nanoseconds == null)
+                throw new IoDeserializationException($"Field '{(seconds == null ? "seconds" : "nanoseconds")}' of 'TimeSpan' is missing.");
+            if (nanoseconds < 0 || nanoseconds >= 1000000000)
+                throw new IoDeserializationException("Field 'nanoseconds' of 'TimeSpan' must be from 0 to 999 999 999.");
 
             try
             {
-                return Enum.Parse(objectType, name);
+                return new TimeSpan(checked(seconds.Value * TimeSpan.TicksPerSecond + nanoseconds.Value / 100));
             }
-            catch (System.ArgumentException e)
+            catch (OverflowException e)
             {
-                throw new Exception($"Enum \"{objectType.Name}\" does not have member \"{name}\".", e);
+                throw new IoDeserializationException($"Value of {seconds} seconds is too big for 'TimeSpan'.", e);
+            }
+        }
+
+        /// <summary>
+        /// Reads e| Name->n|| |. C# enums cannot have values, so the variant must be equal to n||.
+        /// </summary>
+        internal static object DeEnum(IoValue value, Type objectType)
+        {
+            IoEnum e = value.ExpectEnum(objectType);
+            if (!(e.Value is IoNone))
+                throw new IoDeserializationException($"Variant {e.Variant} of enum '{objectType.Name}' must be equal to n||, but is equal to {e.Value.Snippet()}.");
+
+            try
+            {
+                return Enum.Parse(objectType, e.Variant);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new IoDeserializationException($"Enum '{objectType.Name}' does not have member \"{e.Variant}\".", ex);
             }
         }
     }

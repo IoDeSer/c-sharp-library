@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
 using IoDeSer.DeSer;
+using IoDeSer.Errors;
+using IoDeSer.Errors.Deserialization;
+using IoDeSer.Errors.Serialization;
 
 namespace IoDeSer
 {
@@ -10,10 +13,10 @@ namespace IoDeSer
     public static class IoFile
     {
         /*
-         * 
-         * Writers 
+         *
+         * Writers
          *  Object -> TO
-         * 
+         *
          */
 
         /// <summary>
@@ -21,57 +24,68 @@ namespace IoDeSer
         /// <para>
         /// ---</para>
         /// <para>
-        /// Throws <see cref="ArgumentNullException"/> if the object <paramref name="obj"/>  or some of its components are null.
+        /// Throws <see cref="IoTypeNotSupportedException"/> if the object's type is not supported.
         /// </para>
         /// <para>
-        /// Throws <see cref="NotSupportedException"/> if the object's type is not supported.
+        /// Throws <see cref="IoSerializationException"/> if the object is nested too deep (e.g. has reference cycle) or property names are wrong.
         /// </para>
         /// </summary>
+        /// <param name="obj">Object to serialize. Null values are written as <c>n||</c>.</param>
+        /// <param name="format">Layout of the string, <see cref="IoFormat.Pretty"/> by default.</param>
         /// <returns>String in .io file format.</returns>
-        public static string WriteToString<T>(T obj)
+        public static string WriteToString<T>(T obj, IoFormat format = default(IoFormat))
         {
-            return IoSer.WriteToString(obj);
+            return IoSer.WriteToString(obj, format);
         }
         /// <summary>
         /// Converts the provided object <paramref name="obj"/> to .io file format and writes it to the stream <paramref name="sw"/>.
         /// <para>
         /// ---</para>
         /// <para>
-        /// Throws <see cref="ArgumentNullException"/> if the object <paramref name="obj"/> or some of its components are null.
+        /// Throws <see cref="IoTypeNotSupportedException"/> if the object's type is not supported.
         /// </para>
         /// <para>
-        /// Throws <see cref="NotSupportedException"/> if the object's type is not supported.
+        /// Throws <see cref="IoSerializationException"/> if the object is nested too deep (e.g. has reference cycle) or property names are wrong.
         /// </para>
         /// </summary>
-        public static void WriteToFile<T>(T obj, StreamWriter sw)
+        /// <param name="obj">Object to serialize. Null values are written as <c>n||</c>.</param>
+        /// <param name="sw">Stream to .io file.</param>
+        /// <param name="format">Layout of the string, <see cref="IoFormat.Pretty"/> by default.</param>
+        public static void WriteToFile<T>(T obj, StreamWriter sw, IoFormat format = default(IoFormat))
         {
-            sw.Write(WriteToString(obj));
+            sw.Write(WriteToString(obj, format));
         }
 
 
 
 
         /*
-         * 
-         * Readers 
+         *
+         * Readers
          *  Object <- FROM
-         * 
+         *
          */
 
 
         /// <summary>
         /// Reads the content of .io file as stream <paramref name="sr"/> and tries to convert it to type <typeparamref name="T"/>.
         /// <para>
+        /// The file can be written in any <see cref="IoFormat"/>, whitespace between tokens is ignored.
+        /// </para>
+        /// <para>
         /// ---
         /// </para>
         /// <para>
-        /// Throws <see cref="InvalidCastException"/> if the provided type <typeparamref name="T"/> does not contain some property from the file.
+        /// Throws <see cref="IoDeserializationException"/> if the file is not in .io format or does not match type <typeparamref name="T"/>.
         /// </para>
         /// <para>
-        /// Throws <see cref="InvalidDataException"/> when the type <typeparamref name="T"/> is not supported.
+        /// Throws <see cref="IoMissingPropertyException"/> if the provided type <typeparamref name="T"/> does not contain some property from the file.
         /// </para>
         /// <para>
-        /// Throws <see cref="MissingMethodException"/> when the type <typeparamref name="T"/> does not implement parameterless constructor.
+        /// Throws <see cref="IoMissingConstructorException"/> when the type <typeparamref name="T"/> does not implement parameterless constructor.
+        /// </para>
+        /// <para>
+        /// Throws <see cref="IoTypeNotSupportedException"/> when the type <typeparamref name="T"/> is not supported.
         /// </para>
         /// </summary>
         /// <param name="sr">Stream to .io file.</param>
@@ -79,21 +93,27 @@ namespace IoDeSer
         /// <returns>Object of type <typeparamref name="T"/>.</returns>
         public static T ReadFromFile<T>(StreamReader sr)
         {
-            return ReadFromString<T>(sr.ReadToEnd().Trim());
+            return ReadFromString<T>(sr.ReadToEnd());
         }
         /// <summary>
         /// Reads content of string <paramref name="ioString"/> in .io file format and tries to convert it to type <typeparamref name="T"/>.
         /// <para>
+        /// The string can be written in any <see cref="IoFormat"/>, whitespace between tokens is ignored.
+        /// </para>
+        /// <para>
         /// ---
         /// </para>
         /// <para>
-        /// Throws <see cref="InvalidCastException"/> if the provided type <typeparamref name="T"/> does not contain some property from the string <paramref name="ioString"/>.
+        /// Throws <see cref="IoDeserializationException"/> if the string is not in .io format or does not match type <typeparamref name="T"/>.
         /// </para>
         /// <para>
-        /// Throws <see cref="InvalidDataException"/> when the type <typeparamref name="T"/> is not supported.
+        /// Throws <see cref="IoMissingPropertyException"/> if the provided type <typeparamref name="T"/> does not contain some property from the string <paramref name="ioString"/>.
         /// </para>
         /// <para>
-        /// Throws <see cref="MissingMethodException"/> when the type <typeparamref name="T"/> does not implement parameterless constructor.
+        /// Throws <see cref="IoMissingConstructorException"/> when the type <typeparamref name="T"/> does not implement parameterless constructor.
+        /// </para>
+        /// <para>
+        /// Throws <see cref="IoTypeNotSupportedException"/> when the type <typeparamref name="T"/> is not supported.
         /// </para>
         /// </summary>
         /// <param name="ioString">String in .io file format.</param>
@@ -103,6 +123,6 @@ namespace IoDeSer
         {
             return (T)IoDes.ReadFromString(ioString, typeof(T));
         }
-        
+
     }
 }

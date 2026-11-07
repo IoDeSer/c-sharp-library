@@ -1,152 +1,132 @@
-﻿using IoDeSer.Attributes;
-using System;
+﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using IoDeSer.Attributes.Ordering;
-using IoDeSer.Extensions;
+using IoDeSer.Errors.Serialization;
+using IoDeSer.Format;
 using IoDeSer.Helpers;
-using System.Numerics;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Text;
 
 namespace IoDeSer.DeSer.Processing
 {
     internal static class IoSerProcessing
     {
-        public static uint GetLength(IEnumerable enumerable)
+        internal static void SerIEnumerable(IoWriter writer, IEnumerable enumerable)
         {
-            uint count = 0;
-            foreach (var item in enumerable)
-            {
-                count++;
-            }
-            return count;
+            writer.WriteSequence('a', enumerable.Cast<object>(), element => IoSer.Write(writer, element));
         }
 
         /// <summary>
-        /// Returns <paramref name="number"/> of tabulators as string.
+        /// Multidimensional array is written as nested arrays: int[2,3] as a| a| x + x + x | + a| x + x + x | |.
         /// </summary>
-        public static string MakeShift(int number)
+        internal static void SerMultidimensionalArray(IoWriter writer, Array array)
         {
-            string shift = "";
-            for (int i = 0; i < number; i++)
-            {
-                shift += "\t";
-            }
-            return shift;
+            SerDimension(writer, array, new int[array.Rank], 0);
         }
 
-
-        internal static string SerIEnumerable<T>(T obj, int number)
+        static void SerDimension(IoWriter writer, Array array, int[] indices, int dimension)
         {
-            IEnumerable objArray = (IEnumerable)obj;
-            string arrayReturn = "";
-            bool isFirst = true;
-
-            Array tryArray = (objArray as Array);
-            if (tryArray != null && tryArray.Rank > 1)
+            IEnumerable<int> range = Enumerable.Range(0, array.GetLength(dimension));
+            writer.WriteSequence('a', range, i =>
             {
-                MultidimensionalArray multiDimensionalArray = new MultidimensionalArray(tryArray, number);
-
-                return multiDimensionalArray.ToString();
-
-            }
-
-            if (GetLength(objArray) == 0)
-                return "||";
-
-            foreach (var element in objArray)
-            {
-                if (!isFirst)
-                    arrayReturn += $"\n{MakeShift(number + 1)}+\n";
+                indices[dimension] = i;
+                if (dimension == array.Rank - 1)
+                    IoSer.Write(writer, array.GetValue(indices));
                 else
-                    isFirst = false;
-                arrayReturn += MakeShift(number + 1) + IoSer.Write(element.GetType(), element, number + 1);
-
-            }
-            return $"|\n{arrayReturn}\n{MakeShift(number)}|";
+                    SerDimension(writer, array, indices, dimension + 1);
+            });
         }
 
-
-
-
-        internal static string SerClass<T>(T obj, int number)
+        /// <summary>
+        /// Dictionary is written as m| a| key + value | + ... |.
+        /// </summary>
+        internal static void SerDictionary(IoWriter writer, IEnumerable dictionary)
         {
-            PropertyInfo[] objectClassProperties = obj.GetType().GetProperties();
-            Array.Sort(objectClassProperties, new IoPropertiesComparator<T>());
-
-
-            string classReturn = "";
-            bool isFirst = true;
-
-            foreach (PropertyInfo property in objectClassProperties)
+            // Hashtable enumerates DictionaryEntry, generic dictionaries KeyValuePair<K, V>
+            IEnumerable<KeyValuePair<object, object>> entries = dictionary.Cast<object>().Select(e =>
             {
-                if (property.GetCustomAttribute<IoItemIgnoreAttribute>() == null)
-                {
-                    var propertyValue = property.GetValue(obj);
+                if (e is DictionaryEntry entry)
+                    return new KeyValuePair<object, object>(entry.Key, entry.Value);
+                Type entryType = e.GetType();
+                return new KeyValuePair<object, object>(entryType.GetProperty("Key").GetValue(e), entryType.GetProperty("Value").GetValue(e));
+            });
 
-                    //if (propertyValue != null)
-                    //{
-                    IoItemNameAttribute ioNameOptionalAttribute = property.GetCustomAttribute<IoItemNameAttribute>();
-                    string propertyName = ioNameOptionalAttribute != null ? ioNameOptionalAttribute.customPropertyName : property.Name;
-
-                    if (!isFirst)
-                    {
-                        classReturn += "\n";
-                    }
-
-
-                    classReturn += $"{MakeShift(number + 1)}{propertyName}->{IoSer.Write(property.PropertyType, propertyValue, number + 1)}";
-                    isFirst = false;
-                    //}
-                }
-            }
-            return $"|\n{classReturn}\n{MakeShift(number)}|";
+            writer.WriteSequence('m', entries, entry =>
+                writer.WriteSequence('a', new[] { entry.Key, entry.Value }, item => IoSer.Write(writer, item)));
         }
 
-        internal static string SerDictionary<T>(T obj, int number)
+        /// <summary>
+        /// KeyValuePair, ValueTuple and Tuple are written as arrays, the same as tuples in Rust.
+        /// </summary>
+        internal static void SerTuple(IoWriter writer, object tuple)
+        {
+            writer.WriteSequence('a', TupleItems(tuple), item => IoSer.Write(writer, item));
+        }
+
+        internal static IEnumerable<object> TupleItems(object tuple)
+        {
+            Type type = tuple.GetType();
+            if (IoTypes.IsKeyValuePair(type))
+                return new[] { type.GetProperty("Key").GetValue(tuple), type.GetProperty("Value").GetValue(tuple) };
+
+            int count = type.GetGenericArguments().Length;
+            if (count > 7)
+                throw new IoSerializationException($"Tuples with more than 7 elements are not supported ({type.Name}).");
+
+            if (IoTypes.IsValueTuple(type))
+                return Enumerable.Range(1, count).Select(i => type.GetField("Item" + i).GetValue(tuple));
+            return Enumerable.Range(1, count).Select(i => type.GetProperty("Item" + i).GetValue(tuple));
+        }
+
+        internal static void SerClass(IoWriter writer, object obj)
         {
             Type objectType = obj.GetType();
+            List<PropertyInfo> properties = IoTypes.IoProperties(objectType);
 
-            var keyProperty = objectType.GetProperty("Key");
-            object key = keyProperty.GetValue(obj);
-            var valueProperty = objectType.GetProperty("Value");
-            object value = valueProperty.GetValue(obj);
-            Type[] types = objectType.GetGenericArguments();
+            HashSet<string> names = new HashSet<string>();
+            List<KeyValuePair<string, PropertyInfo>> fields = new List<KeyValuePair<string, PropertyInfo>>();
+            foreach (PropertyInfo property in properties)
+            {
+                string name = IoTypes.IoName(property);
+                if (!IoValue.IsValidName(name))
+                    throw new IoSerializationException($"Name \"{name}\" of property {objectType.Name}.{property.Name} cannot be empty or contain whitespace, '|', '+' or \"->\".");
+                if (!names.Add(name))
+                    throw new IoSerializationException($"Name \"{name}\" is used by more than one property of {objectType.Name}.");
+                fields.Add(new KeyValuePair<string, PropertyInfo>(name, property));
+            }
 
-            return $"|\n{MakeShift(number + 1)}{IoSer.Write(keyProperty.PropertyType, key, number + 1)}\n{MakeShift(number + 1)}+\n{MakeShift(number + 1)}{IoSer.Write(valueProperty.PropertyType, value, number + 1)}\n{MakeShift(number)}|";
+            writer.WriteObject(fields, property => IoSer.Write(writer, property.GetValue(obj)));
         }
 
-        internal static string SerStruct<T>(T obj, int number)
+        /// <summary>
+        /// Written as o| seconds->i|..| nanoseconds->i|..| |, the same as Duration in Rust. Nanoseconds are always from 0 to 999 999 999.
+        /// </summary>
+        internal static void SerTimeSpan(IoWriter writer, TimeSpan span)
         {
-            return SerClass(obj, number);
+            long seconds = span.Ticks / TimeSpan.TicksPerSecond;
+            long remainder = span.Ticks % TimeSpan.TicksPerSecond;
+            if (remainder < 0)
+            {
+                seconds--;
+                remainder += TimeSpan.TicksPerSecond;
+            }
+
+            var fields = new[]
+            {
+                new KeyValuePair<string, object>("seconds", seconds),
+                new KeyValuePair<string, object>("nanoseconds", remainder * 100),
+            };
+            writer.WriteObject(fields, value => IoSer.Write(writer, value));
         }
 
-        internal static string SerDateTime<T>(T obj, int number)
+        /// <summary>
+        /// Written as e| Name->n|| |, the same as unit variant of enum in Rust.
+        /// </summary>
+        internal static void SerEnum(IoWriter writer, object value)
         {
-            if (typeof(DateTime).IsAssignableFrom(obj.GetType()))
-            {
-                return ((DateTime)(obj as object)).ToString("|yyyy-MM-dd'T'HH:mm:ss.fffK|");
-            }
-            else if (typeof(DateTimeOffset).IsAssignableFrom(obj.GetType()))
-            {
-                return ((DateTimeOffset)(obj as object)).ToString("|yyyy-MM-dd'T'HH:mm:ss.fffK|");
-            }
-            else if (typeof(TimeSpan).IsAssignableFrom(obj.GetType()))
-            {
-                TimeSpan span = (TimeSpan)(obj as object);
-                BigInteger nanos = new BigInteger(span.Ticks) * 100;
-                //long nanos = span.Ticks * 100;
-
-                return $"|\n{MakeShift(number + 1)}seconds->|{(long)span.TotalSeconds}|\n{MakeShift(number + 1)}nanoseconds->|{nanos}|\n{MakeShift(number)}|";
-            }
-            return null;
+            // [Flags] combinations are written as "A,B"
+            string name = value.ToString().Replace(" ", "");
+            writer.WriteEnum(name, writer.WriteNone);
         }
-
-        internal static string SerString(string obj) => $"|{obj.EscapeString()}|";
-
-        internal static string SerEnum<T>(T obj, int number) => $"|\n{MakeShift(number + 1)}{obj}->|||\n{MakeShift(number)}|";
     }
 }

@@ -5,7 +5,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Io-Maciek</Authors>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>0.5.0</Version>
+    <Version>0.6.0</Version>
     <Description>De/Serialization of .io file format.</Description>
     <PackageProjectUrl>https://github.com/IoDeSer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -20,7 +20,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Added support for de/serialization of Enums.</PackageReleaseNotes>
+    <PackageReleaseNotes>New .io format compatible with the Rust library: type tags, IoFormat (pretty, compact, minified), whitespace-insensitive parser, IoValue, multidimensional arrays and tuples.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
